@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppMechanismImagesDao">
+	
+	<!-- 基本map -->
+	<resultMap type="com.cqcej.web.modules.common.entity.MechanismImagesEntity" id="appMechanismImagesMap"
+	           extends="com.cqcej.web.modules.common.dao.MechanismImagesDao.mechanismImagesMap">
+	
+	</resultMap>
+	
+	<select id="getMechanismBanners" resultMap="com.cqcej.web.modules.common.dao.MechanismImagesDao.mechanismImagesMap" parameterType="Long">
+		select * from ct_mechanism_images where mechanism_id=#{mechanismId}
+	</select>
+
+</mapper>

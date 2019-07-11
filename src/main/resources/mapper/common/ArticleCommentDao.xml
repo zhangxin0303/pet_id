@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.ArticleCommentDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.common.entity.ArticleCommentEntity" id="articleCommentMap">
+		<result property="commentId" column="comment_id"/>
+		<result property="articleId" column="article_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="commentContent" column="comment_content"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+	
+	<!-- 手机端，文章详情评论列表 -->
+	<resultMap id="appArticleCommentMap" extends="articleCommentMap"
+	           type="com.cqcej.web.modules.app.entity.home.AppArticleCommentEntity">
+		<result property="userAvatar" column="user_avatar"/>
+		<result property="userNickname" column="user_nickname"/>
+	</resultMap>
+	
+	<select id="getComments" resultMap="appArticleCommentMap">
+		select cac.*, cu.avatar as user_avatar, cu.nickname as user_nickname
+		from ct_article_comment cac
+			     left join ct_user cu on cu.user_id = cac.user_id
+		where article_id = #{articleId}
+	</select>
+
+
+</mapper>

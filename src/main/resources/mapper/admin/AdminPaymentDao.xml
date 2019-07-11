@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminPaymentDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminPaymentEntity" id="adminPaymentMap">
+        <result property="paymentId" column="payment_id"/>
+        <result property="paymentName" column="payment_name"/>
+        <result property="payType" column="pay_type"/>
+        <result property="paymentLogo" column="payment_logo"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="poundage" column="poundage"/>
+        <result property="poundageType" column="poundage_type"/>
+        <result property="configParam" column="config_param"/>
+        <result property="clientType" column="client_type"/>
+    </resultMap>
+
+
+    <select id="getList" resultMap="adminPaymentMap">
+        select * from ct_payment limit #{start},#{size}
+    </select>
+
+    <select id="getListCount" resultType="java.lang.Integer">
+        select count(*) from ct_payment
+    </select>
+
+    <update id="forbidden">
+        update ct_payment set payment_status = #{paymentStatus} where payment_id = #{paymentId}
+    </update>
+
+    <select id="info" resultMap="adminPaymentMap">
+      select * from ct_payment where payment_id = #{paymentId}
+    </select>
+    
+    <update id="updatePay">
+        update ct_payment
+        <set>
+            <if test="paymentName != null">
+                payment_name = #{paymentName},
+            </if>
+            <if test="payType != null">
+                pay_type = #{payType},
+            </if>
+            <if test="paymentLogo != null">
+                payment_logo = #{paymentLogo},
+            </if>
+            <if test="paymentStatus != null">
+                payment_status = #{paymentStatus},
+            </if>
+            <if test="poundage != null">
+                poundage = #{poundage},
+            </if>
+            <if test="poundageType != null">
+                poundage_type = #{poundageType},
+            </if>
+            <if test="configParam != null">
+                config_param = #{configParam},
+            </if>
+            <if test="clientType != null">
+                client_type = #{clientType}
+            </if>
+            where payment_id = #{paymentId}
+        </set>
+    </update>
+    
+    <delete id="deletePay">
+        delete from ct_payment where payment_id = #{payId}
+    </delete>
+    
+</mapper>

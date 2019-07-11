@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AppUpgradeDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.admin.entity.AppUpgradeEntity" id="appUpgradeMap">
+		<result property="upgradeId" column="upgrade_id"/>
+		<result property="deviceType" column="device_type"/>
+		<result property="version" column="version"/>
+		<result property="size" column="size"/>
+		<result property="description" column="description"/>
+		<result property="downloadUrl" column="download_url"/>
+		<result property="isForce" column="is_force"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+
+	<!-- 查找最新的版本 -->
+	<select id="findNewVersion" resultType="com.cqcej.web.modules.admin.entity.AppUpgradeEntity">
+		SELECT * FROM ct_app_upgrade WHERE version>#{currentVersion} ORDER BY upgrade_id desc LIMIT 1
+	</select>
+</mapper>

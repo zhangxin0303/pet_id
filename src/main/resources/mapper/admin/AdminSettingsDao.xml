@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminSettingsDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminSettingsEntity" id="adminSettingsMap">
+        <result property="settingKey" column="setting_key"/>
+        <result property="settingValue" column="setting_value"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+
+    <!-- 配置信息-->
+    <select id="findAll" resultMap="adminSettingsMap" parameterType="java.util.List">
+        select * from ct_settings
+        <if test="s != null">
+            where setting_key in
+            <foreach collection="s" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 更新配置信息-->
+    <update id="updatePriceSettings">
+        update ct_settings
+        <set>
+            <if test="settingValue != null">
+                setting_value = #{settingValue},
+            </if>
+        </set>
+        where setting_key = #{settingKey}
+    </update>
+
+    <!-- 查询单个配置信息-->
+    <select id="findSettingByKey" resultType="java.lang.String">
+        select setting_value from ct_settings where setting_key = #{settingKey}
+    </select>
+
+	<!-- 更新json格式的配置-->
+	<update id="updateForJson">
+		update ct_settings set setting_value = #{settingValue} where setting_key = #{settingKey}
+	</update>
+</mapper>

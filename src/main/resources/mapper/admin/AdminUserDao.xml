@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminUserDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.admin.entity.AdminUserEntity" id="userMap">
+		<result property="userId" column="user_id"/>
+		<result property="nickname" column="nickname"/>
+		<result property="mobile" column="mobile"/>
+		<result property="email" column="email"/>
+		<!--<result property="newPassword" column="newPassword"/>-->
+		<result property="userType" column="user_type"/>
+		<result property="score" column="score"/>
+		<result property="avatar" column="avatar"/>
+		<result property="sex" column="sex"/>
+		<result property="provinceId" column="province_id"/>
+		<result property="cityId" column="city_id"/>
+		<result property="areaId" column="area_id"/>
+		<result property="signature" column="signature"/>
+		<result property="forbiddenComment" column="forbidden_comment"/>
+		<result property="status" column="status"/>
+		<result property="createAt" column="create_at"/>
+		<result property="address" column="address"/>
+	</resultMap>
+	<!-- 地址信息-->
+	<resultMap type="com.cqcej.web.modules.admin.entity.AdminAreaEntity" id="areaMap">
+		<result property="areaId" column="area_id"/>
+		<result property="parentId" column="parent_id"/>
+		<result property="areaName" column="area_name"/>
+		<result property="areaCode" column="area_code"/>
+		<result property="areaSort" column="area_sort"/>
+	</resultMap>
+	
+	<!-- 用户列表-->
+	<select id="getUserList" resultMap="userMap">
+		SELECT
+		u.user_id,
+		u.nickname,
+		u.sex,
+		u.mobile,
+		concat(prov.area_name,'-',city.area_name,'-',area.area_name) as address,
+		u.forbidden_comment,
+		u.create_at
+		FROM ct_user u
+		LEFT JOIN ct_area as prov on prov.area_id = u.province_id
+		LEFT JOIN ct_area as city on city.area_id = u.city_id
+		LEFT JOIN ct_area as area on area.area_id = u.area_id
+		<where>
+			<if test="forbiddenComment != null">
+				and u.forbidden_comment = #{forbiddenComment}
+			</if>
+			<if test="userId !=null and userId != ''">
+				and u.user_id = #{userId}
+			</if>
+			<if test="nickname !=null and nickname != ''">
+				and u.nickname like concat(concat('%',#{nickname}),'%')
+			</if>
+		</where>
+		limit #{start},#{size}
+	</select>
+	<!-- 用户数量-->
+	<select id="getUserCount" resultType="java.lang.Integer">
+		SELECT count(*) FROM ct_user u
+		<where>
+			<if test="forbiddenComment !=null">
+				and u.forbidden_comment = #{forbiddenComment}
+			</if>
+			<if test="userId !=null and userId != ''">
+				and u.user_id = #{userId}
+			</if>
+			<if test="nickname !=null and nickname != ''">
+				and u.nickname like concat(concat('%',#{nickname}),'%')
+			</if>
+		</where>
+	</select>
+	<!-- 查看user信息-->
+	<select id="selectUserById" resultMap="userMap">
+        SELECT
+          u.*,
+          concat(prov.area_name,'-',city.area_name,'-',area.area_name) as address
+          from ct_user u
+        LEFT JOIN ct_area as prov on prov.area_id = u.province_id
+        LEFT JOIN ct_area as city on city.area_id = u.city_id
+        LEFT JOIN ct_area as area on area.area_id = u.area_id
+        where user_id = #{userId}
+    </select>
+	<!-- 删除user-->
+	<delete id="deleteUserById">
+        delete from ct_user where user_id = #{userId}
+    </delete>
+	<!-- 修改用户信息-->
+	<update id="updateUserById">
+		update ct_user
+		<set>
+			<if test="nickname != null">
+				nickname = #{nickname},
+			</if>
+			<if test="mobile != null">
+				mobile = #{mobile},
+			</if>
+			<if test="sex != null">
+				sex = #{sex},
+			</if>
+			<if test="score != null">
+				score = #{score},
+			</if>
+			<if test="provinceId != null">
+				province_id = #{provinceId},
+			</if>
+			<if test="cityId != null">
+				city_id = #{cityId},
+			</if>
+			<if test="areaId != null">
+				area_id = #{areaId},
+			</if>
+			<if test="signature != null">
+				signature = #{signature},
+			</if>
+			<if test="forbiddenComment != null">
+				forbidden_comment = #{forbiddenComment}
+			</if>
+		</set>
+		where user_id = #{userId}
+	</update>
+	<!-- 省份信息-->
+	<select id="selectProvinces" resultMap="areaMap">
+        select * from ct_area where parent_id = 0
+    </select>
+	<!-- 城市信息-->
+	<select id="selectCity" resultMap="areaMap">
+        select * from ct_area where parent_id = #{provinceId}
+    </select>
+	<!-- 区域信息-->
+	<select id="selectArea" resultMap="areaMap">
+        select * from ct_area where parent_id = #{cityId}
+    </select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

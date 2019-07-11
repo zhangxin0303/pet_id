@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminServiceOrderDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminServiceOrderEntity" id="serviceOrderMap">
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="mechanismId" column="mechanism_id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="pickupId" column="pickup_id"/>
+        <result property="serviceId" column="service_id"/>
+        <result property="orderType" column="order_type"/>
+        <result property="orderSubtype" column="order_subtype"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="orderAmount" column="order_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="pickupAmount" column="pickup_amount"/>
+        <result property="scoreDiscount" column="score_discount"/>
+        <result property="scoreDiscountAmount" column="score_discount_amount"/>
+        <result property="couponId" column="coupon_id"/>
+        <result property="couponDiscountAmount" column="coupon_discount_amount"/>
+        <result property="payAmount" column="pay_amount"/>
+        <result property="reserveAt" column="reserve_at"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="isPay" column="is_pay"/>
+        <result property="tradeNo" column="trade_no"/>
+        <result property="paymentId" column="payment_id"/>
+        <result property="payAt" column="pay_at"/>
+        <result property="notes" column="notes"/>
+        <result property="provinceId" column="province_id"/>
+        <result property="cityId" column="city_id"/>
+        <result property="areaId" column="area_id"/>
+        <result property="address" column="address"/>
+        <result property="isPickup" column="is_pickup"/>
+        <result property="fosterTime" column="foster_time"/>
+        <result property="createAt" column="create_at"/>
+        <result property="walkDogTime" column="walk_dog_time"/>
+        <result property="nickname" column="nickname"/>
+        <result property="petId" column="pet_id"/>
+        <result property="beginAt" column="begin_at"/>
+        <result property="endAt" column="end_at"/>
+        <result property="givebackId" column="giveback_id"/>
+        <result property="source" column="source"/>
+    </resultMap>
+
+    <!-- 基本信息-->
+    <resultMap id="basicMap" type="com.cqcej.web.modules.admin.entity.order.BasicEntity">
+        <result property="orderNo" column="order_no"/>
+        <result property="nickname" column="nickname"/>
+        <result property="paymentName" column="payment_name"/>
+        <result property="orderSubtype" column="order_subtype"/>
+        <result property="reserveAt" column="reserve_at"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="createAt" column="create_at"/>
+        <result property="pay_at" column="pay_at"/>
+        <result property="orderAmount" column="order_amount"/>
+        <result property="source" column="source"/>
+        <result property="payAt" column="pay_at"/>
+        <result property="during" column="during"/>
+        <result property="walkDogTime" column="walk_dog_time"/>
+    </resultMap>
+
+    <!-- 医师信息-->
+    <resultMap id="doctorMap" type="com.cqcej.web.modules.admin.entity.order.WorkmanEntity">
+        <result property="realname" column="realname"/>
+        <result property="mobile" column="mobile"/>
+        <result property="beginAt" column="begin_at"/>
+        <result property="mechanismName" column="mechanismName"/>
+        <result property="orderSubtype" column="order_subtype"/>
+        <result property="endAt" column="end_at"/>
+        <result property="orderType" column="order_type"/>
+    </resultMap>
+
+    <!-- 买家信息-->
+    <resultMap id="buyerMap" type="com.cqcej.web.modules.admin.entity.order.BuyerEntity">
+        <result property="nickname" column="nickname"/>
+        <result property="mobile" column="mobile"/>
+        <result property="address" column="address"/>
+        <result property="type" column="order_type"/>
+    </resultMap>
+
+    <!-- 病情信息-->
+    <resultMap id="illnessMap" type="com.cqcej.web.modules.admin.entity.order.IllnessEntity">
+        <result property="notes" column="notes"/>
+        <result property="image" column="image"/>
+    </resultMap>
+
+    <!-- 宠物信息-->
+    <resultMap id="petMap" type="com.cqcej.web.modules.admin.entity.order.PetEntity">
+        <result property="petName" column="pet_name"/>
+        <result property="className" column="class_name"/>
+        <result property="petSex" column="pet_sex"/>
+        <result property="petWeight" column="pet_weight"/>
+    </resultMap>
+
+    <!-- 商家信息-->
+    <resultMap id="mechanismMap" type="com.cqcej.web.modules.admin.entity.order.MechanEntity">
+        <result property="mechanismName" column="mechanism_name"/>
+        <result property="telephone" column="telephone"/>
+        <result property="address" column="address"/>
+        <result property="realname" column="realname"/>
+    </resultMap>
+
+    <!-- 订单列表总数-->
+    <select id="getServiceOrderCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        from ct_service_order AS so
+        LEFT JOIN ct_mechanism As m on so.mechanism_id = m.mechanism_id
+        LEFT JOIN ct_user AS u on u.user_id = so.user_id
+        <where>
+            <if test="userId != null and userId != ''">
+                so.user_id = #{userId}
+            </if>
+            <if test="orderSubtype != null and orderSubtype != ''">
+                and so.order_subtype = #{orderSubtype}
+            </if>
+            <if test="orderStatus != null and orderStatus != ''">
+                and so.order_status = #{orderStatus}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and so.order_no like concat(concat('%',#{orderNo}),'%')
+            </if>
+            <if test="mechanismName != null and mechanismName != ''">
+                and m.mechanism_name like concat(concat('%',#{mechanismName}),'%')
+            </if>
+        </where>
+    </select>
+    <!-- 订单列表-->
+    <select id="getServiceOrderList" resultMap="serviceOrderMap">
+        SELECT
+            so.order_id,
+            so.user_id,
+            so.order_no,
+            so.order_type,
+            so.order_subtype,
+            so.create_at,
+            so.pay_at,
+            u.nickname,
+            so.order_amount,
+            so.order_status,
+            m.mechanism_name
+        from ct_service_order AS so
+        LEFT JOIN ct_mechanism As m on so.mechanism_id = m.mechanism_id
+        LEFT JOIN ct_user AS u on u.user_id = so.user_id
+        <where>
+            <if test="userId != null and userId != ''">
+                so.user_id = #{userId}
+            </if>
+            <if test="orderSubtype != null and orderSubtype != ''">
+                and so.order_subtype = #{orderSubtype}
+            </if>
+            <if test="orderStatus != null and orderStatus != ''">
+                and so.order_status = #{orderStatus}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and so.order_no like concat(concat('%',#{orderNo}),'%')
+            </if>
+            <if test="mechanismName != null and mechanismName != ''">
+                and m.mechanism_name like concat(concat('%',#{mechanismName}),'%')
+            </if>
+        </where>
+        LIMIT #{start},#{size}
+    </select>
+
+    <!-- 订单详情-->
+    <select id="selectOrderById" resultMap="serviceOrderMap">
+        select so.*,u.nickname from ct_service_order so
+        left join ct_user u on so.user_id = u.user_id
+        where order_id = #{orderId}
+    </select>
+
+    <!-- 基本信息-->
+    <select id="selectBasicMessage" resultMap="basicMap">
+        SELECT
+            so.order_no,
+            u.nickname,
+            p.payment_name,
+            so.order_subtype,
+            so.reserve_at,
+            so.order_status,
+            so.create_at,
+            so.pay_at,
+            so.order_amount,
+            so.source,
+            so.during,
+            so.walk_dog_time
+        FROM ct_service_order AS so
+        LEFT JOIN ct_user AS u on u.user_id = so.user_id
+        LEFT JOIN ct_payment AS p on p.payment_id = so.payment_id
+        where so.order_id = #{orderId}
+    </select>
+
+    <!-- 医师信息-->
+    <select id="selectDoctorMessage" resultMap="doctorMap">
+        SELECT
+            u.realname,
+            u.mobile,
+            so.begin_at,
+            IFNULL(m.mechanism_name,"单独医师") mechanismName,
+            so.order_subtype,
+            so.end_at,
+            so.order_type
+            from ct_service_order AS so
+		LEFT JOIN ct_worker AS w on w.worker_id = so.worker_id
+		LEFT JOIN ct_user AS u on u.user_id = w.user_id
+		LEFT JOIN ct_mechanism AS m on m.mechanism_id = w.mechanism_id
+		where so.order_id = #{orderId}
+    </select>
+
+    <!-- 买家信息-->
+    <select id="selectBuyerMessage" resultMap="buyerMap">
+        SELECT
+            u.nickname,
+            u.mobile,
+            concat(prov.area_name,city.area_name,area.area_name,so.address) address,
+            so.order_type
+        from ct_service_order so
+        LEFT JOIN ct_user u on u.user_id = so.user_id
+        LEFT JOIN ct_area prov on prov.area_id = so.province_id
+        LEFT JOIN ct_area city on city.area_id = so.city_id
+        LEFT JOIN ct_area area on area.area_id = so.area_id
+        where so.order_id = #{orderId}
+    </select>
+
+    <!-- 病情信息-->
+    <select id="selectIllnessMessage" resultMap="illnessMap">
+      SELECT
+            so.notes,
+            si.image_url image
+        FROM ct_service_order so
+        LEFT JOIN ct_service_images si on so.order_id = si.order_id
+        where so.order_id = #{orderId}
+    </select>
+    <!-- 宠物信息-->
+    <select id="selectPetMessage" resultMap="petMap">
+        SELECT
+            up.pet_name,
+            pc.class_name,
+            up.pet_sex,
+            up.pet_weight
+		FROM ct_service_order so
+		LEFT JOIN ct_user_pets up on so.pet_id = up.pet_id
+		LEFT JOIN ct_pet_class pc on up.pet_class_id = pc.pet_class_id
+		where so.order_id = #{orderId}
+    </select>
+
+    <!-- 商家信息-->
+    <select id="selectMechanismMessage" resultMap="mechanismMap">
+      SELECT
+            m.mechanism_name,
+            m.telephone,
+            concat(prov.area_name,city.area_name,area.area_name,m.address) address,
+            u.realname
+        FROM ct_service_order so
+        LEFT JOIN ct_mechanism m on so.mechanism_id = m.mechanism_id
+        LEFT JOIN ct_user u on m.user_id = u.user_id
+        LEFT JOIN ct_area prov on prov.area_id = m.province_id
+        LEFT JOIN ct_area city on city.area_id = m.city_id
+        LEFT JOIN ct_area area on area.area_id = m.area_id
+        where so.order_id = #{orderId}
+    </select>
+    <!-- 接送人员信息-->
+    <select id="selectPickUpMessage" resultType="com.cqcej.web.modules.admin.entity.order.PickUpEntity">
+        SELECT
+            u.realname,
+            u.mobile,
+            so.begin_at,
+            w.type,
+            so.end_at
+        FROM ct_service_order so
+        LEFT JOIN ct_worker w on so.pickup_id = w.worker_id
+        LEFT JOIN ct_user u on u.user_id = w.user_id
+        LEFT JOIN ct_mechanism m on w.mechanism_id = m.mechanism_id
+        where so.order_id = #{orderId}
+    </select>
+    <!-- 归还人员信息(和上面的不一样so.giveback_id = w.worker_id)-->
+    <select id="selectGiveBackMessage" resultType="com.cqcej.web.modules.admin.entity.order.PickUpEntity">
+        SELECT
+            u.realname,
+            u.mobile,
+            so.begin_at,
+            w.type,
+            so.end_at
+        FROM ct_service_order so
+        LEFT JOIN ct_worker w on so.giveback_id = w.worker_id
+        LEFT JOIN ct_user u on u.user_id = w.user_id
+        LEFT JOIN ct_mechanism m on w.mechanism_id = m.mechanism_id
+        where so.order_id = #{orderId}
+    </select>
+
+    <!-- 遛狗人员信息-->
+    <select id="selectWalkDogMessage" resultMap="doctorMap">
+        SELECT
+            u.nickname,
+            u.mobile,
+            so.begin_at,
+            IFNULL(m.mechanism_name,"宠它官方") mechanismName,
+            so.order_subtype,
+            so.end_at,
+            so.order_type
+            from ct_service_order AS so
+		LEFT JOIN ct_worker AS w on w.worker_id = so.worker_id
+		LEFT JOIN ct_user AS u on u.user_id = w.user_id
+		LEFT JOIN ct_mechanism AS m on m.mechanism_id = w.mechanism_id
+		where so.order_id = #{orderId}
+    </select>
+
+    <!-- 订单统计-->
+    <select id="statistics" resultType="com.cqcej.web.modules.admin.entity.order.OrderStatisticsEntity">
+      select date(create_at) createAt,
+        count(1) orderCount,
+        ifnull(sum(order_amount),0) orderSum,
+        count(if(is_pay = 1,true,null)) AS payCount,
+        ifnull(sum(if(is_pay = 1,pay_amount,0)),0) paySum,
+        ifnull(sum(if(is_pay = 1,order_amount,0)),0) formerSum
+        from ct_service_order
+        <where>
+            <if test="searchDay != null and searchDay != ''">
+                DATE_SUB(NOW(), INTERVAL #{searchDay} DAY) <![CDATA[<=]]> create_at
+            </if>
+            <if test="startDate != null and startDate != ''">
+                and date(create_at) <![CDATA[>=]]> #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date(create_at) <![CDATA[<=]]> #{endDate}
+            </if>
+        </where>
+	  group by DATE_FORMAT(create_at,'%Y-%m-%d')
+    </select>
+
+    <!-- 订单统计总数-->
+    <select id="getStatisticsCount" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT(DATE_FORMAT(create_at,'%Y-%m-%d'))) FROM ct_service_order
+        <where>
+            <if test="searchDay != null and searchDay != ''">
+                DATE_SUB(CURDATE(), INTERVAL #{searchDay} DAY) <![CDATA[<=]]> date(create_at)
+            </if>
+            <if test="startDate != null and startDate != ''">
+                and date(create_at) <![CDATA[>=]]> #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date(create_at) <![CDATA[<=]]> #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <!-- 平台收入-->
+    <select id="platformStats" resultType="com.cqcej.web.modules.admin.entity.order.OrderStatisticsEntity">
+        select
+            count(if(is_pay = 1,true,null)) AS payCount,
+            ifnull(sum(if(is_pay = 1,pay_amount,0)),0) paySum,
+            ifnull(sum(if(is_pay = 1,order_amount,0)),0) formerSum
+        from ct_service_order
+    </select>
+    <!-- 宠物医疗分成-->
+    <select id="medicalStats" resultType="com.cqcej.web.modules.admin.entity.order.OrderStatisticsEntity">
+        select
+            count(if(is_pay = 1,true,null)) AS payCount,
+            ifnull(sum(if(is_pay = 1,pay_amount,0)),0) paySum,
+            ifnull(sum(if(is_pay = 1,order_amount,0)),0) formerSum
+        from ct_service_order
+        where mechanism_id = 1
+    </select>
+    <!-- 宠物美容分成-->
+    <select id="beautyStats" resultType="com.cqcej.web.modules.admin.entity.order.OrderStatisticsEntity">
+        select
+            count(if(is_pay = 1,true,null)) AS payCount,
+            ifnull(sum(if(is_pay = 1,pay_amount,0)),0) paySum,
+            ifnull(sum(if(is_pay = 1,order_amount,0)),0) formerSum
+        from ct_service_order
+        where mechanism_id = 2
+    </select>
+    <!-- 宠物健康分成-->
+    <select id="healthStats" resultType="com.cqcej.web.modules.admin.entity.order.OrderStatisticsEntity">
+        select
+            count(if(is_pay = 1,true,null)) AS payCount,
+            ifnull(sum(if(is_pay = 1,pay_amount,0)),0) paySum,
+            ifnull(sum(if(is_pay = 1,order_amount,0)),0) formerSum
+        from ct_service_order
+        where mechanism_id = 4
+    </select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.PaymentDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.common.entity.PaymentEntity" id="paymentMap">
+        <result property="paymentId" column="payment_id"/>
+        <result property="paymentName" column="payment_name"/>
+        <result property="payType" column="pay_type"/>
+        <result property="paymentLogo" column="payment_logo"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="poundage" column="poundage"/>
+        <result property="poundageType" column="poundage_type"/>
+        <result property="configParam" column="config_param"/>
+        <result property="clientType" column="client_type"/>
+    </resultMap>
+
+
+</mapper>

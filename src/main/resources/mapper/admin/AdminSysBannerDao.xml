@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminSysBannerDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminSysBannerEntity" id="sysBannerMap">
+        <result property="bannerId" column="banner_id"/>
+        <result property="position" column="position"/>
+        <result property="title" column="title"/>
+        <result property="url" column="url"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="sort" column="sort"/>
+        <result property="status" column="status"/>
+        <result property="platform" column="platform"/>
+        <result property="createAt" column="create_at"/>
+    </resultMap>
+
+
+    <!-- 列表信息-->
+    <select id="getList" resultMap="sysBannerMap">
+        SELECT
+            banner_id,
+            url,
+            image_url,
+            position,
+            status
+         FROM ct_sys_banner
+         limit #{start},#{size}
+    </select>
+
+    <!-- 轮播图信息-->
+    <select id="selectBanner" resultMap="sysBannerMap">
+        select * from ct_sys_banner  where banner_id = #{bannerId}
+    </select>
+
+    <!-- 列表信息总数-->
+    <select id="getListCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+         FROM ct_sys_banner
+    </select>
+
+    <!-- 删除-->
+    <delete id="remove">
+        delete from ct_sys_banner where banner_id = #{bannerId}
+    </delete>
+
+    <!-- 添加-->
+    <insert id="insertBanner" parameterType="java.util.List">
+        insert into ct_sys_banner(position,url,image_url,platform,status,interval_time,create_at) values
+        <foreach collection="list" separator="," item="banner">
+            (#{banner.position},#{banner.url},#{banner.imageUrl},#{banner.platform},#{banner.status},#{banner.intervalTime},NOW())
+        </foreach>
+    </insert>
+
+    <!-- 修改轮播图-->
+    <update id="updateBanner">
+        UPDATE ct_sys_banner
+        <set>
+            <if test="position != null">
+                position = #{position},
+            </if>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="imageUrl != null">
+                image_url = #{imageUrl},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="platform != null">
+                platform = #{platform},
+            </if>
+            <if test="intervalTime != null">
+                interval_time = #{intervalTime}
+            </if>
+        </set>
+        WHERE banner_id = #{bannerId}
+    </update>
+
+    <!-- 是否开启-->
+    <update id="updateStatus">
+        update ct_sys_banner set status = #{status} where banner_id = #{bannerId}
+    </update>
+</mapper>

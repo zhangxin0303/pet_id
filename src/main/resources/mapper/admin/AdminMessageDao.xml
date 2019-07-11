@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminMessageDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminMessageEntity" id="adminMessageMap">
+        <result property="messageId" column="message_id"/>
+        <result property="messageType" column="message_type"/>
+        <result property="objectId" column="object_id"/>
+        <result property="messageTitle" column="message_title"/>
+        <result property="messageContent" column="message_content"/>
+        <result property="note" column="note"/>
+        <result property="createAt" column="create_at"/>
+    </resultMap>
+
+    <!-- 所有消息-->
+    <select id="getList" resultType="com.cqcej.web.modules.admin.entity.AdminMessageEntity">
+        SELECT
+        m.message_id,
+        m.message_title,
+        m.message_content,
+        m.create_at
+        FROM ct_message m
+        <where>
+            <if test="messageType != null and messageType != ''">
+                m.message_type = #{messageType}
+            </if>
+        </where>
+        order by m.create_at DESC
+        limit #{start},#{size}
+    </select>
+
+    <!-- 所有消息总数-->
+    <select id="getListCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM ct_message m
+        <where>
+            <if test="messageType != null and messageType != ''">
+                m.message_type = #{messageType}
+            </if>
+        </where>
+    </select>
+    <!-- 删除所有消息-->
+    <delete id="deleteMessage" parameterType="java.util.List">
+        delete from ct_message where message_id in
+        <foreach collection="list" item="messageId" open="(" separator="," close=")">
+            #{messageId}
+        </foreach>
+    </delete>
+
+    <!-- 查看-->
+    <select id="getMessageById" resultType="com.cqcej.web.modules.admin.entity.AdminMessageEntity">
+        select message_id,message_title,message_content,create_at from ct_message where message_id = #{messageId}
+    </select>
+
+    <!-- 添加消息|-->
+    <insert id="saveMessage">
+        <selectKey keyProperty="messageId" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into ct_message(message_type,object_id,message_title,message_content,create_at)
+        values (#{messageType},0,#{messageTitle},#{messageContent},now())
+    </insert>
+
+    <!-- 商户消息-->
+    <select id="selectMechanismIds" resultType="java.lang.Long">
+        select user_id from ct_user where user_type = 10 or user_type = 11
+    </select>
+    <!-- 用户消息-->
+    <select id="selectUserIds" resultType="java.lang.Long">
+        select user_id from ct_user where user_type = 1
+    </select>
+    <!-- 接送员消息-->
+    <select id="selectPickupIds" resultType="java.lang.Long">
+        select user_id from ct_user where user_type = 21 or user_type = 22
+    </select>
+    <!-- 系统消息-->
+    <select id="selectSystemIds" resultType="java.lang.Long">
+        select user_id from ct_user
+    </select>
+    <!-- 添加消息记录到中间表-->
+    <insert id="saveMessageToUser">
+        insert into ct_user_message(user_id,message_id) values
+        <foreach collection="ids" item="userId" separator=",">
+            (#{userId},#{messageId})
+        </foreach>
+    </insert>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

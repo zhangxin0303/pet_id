@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.UserBankCardDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.common.entity.UserBankCardEntity" id="userBankCardMap">
+		<result property="cardId" column="card_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="name" column="name"/>
+		<result property="bankNo" column="bank_no"/>
+		<result property="mobile" column="mobile"/>
+		<result property="isDefault" column="is_default"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+	
+	<resultMap type="com.cqcej.web.modules.app.entity.AppUserBankCardEntity" extends="userBankCardMap"
+	           id="appUserBankCardMap">
+		<result property="bankName" column="bank_name"/>
+		<result property="iconUrl" column="icon_url"/>
+	</resultMap>
+	
+	<select id="getBindBank" resultMap="appUserBankCardMap">
+		select ubc.*,b.bank_name,b.icon_url
+		from ct_user_bank_card as ubc
+			     left join ct_bank as b on b.bank_id = ubc.bank_id
+		where user_id = #{userId}
+	</select>
+</mapper>

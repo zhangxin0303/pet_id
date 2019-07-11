@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.UserDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.common.entity.UserEntity" id="userMap">
+		<result property="userId" column="user_id"/>
+		<result property="nickname" column="nickname"/>
+		<result property="realname" column="realname"/>
+		<result property="idCard" column="id_card"/>
+		<result property="mobile" column="mobile"/>
+		<result property="email" column="email"/>
+		<result property="password" column="password"/>
+		<result property="userType" column="user_type"/>
+		<result property="score" column="score"/>
+		<result property="scoreProgress" column="score_progress"/>
+		<result property="balance" column="balance"/>
+		<result property="totalIncome" column="total_income"/>
+		<result property="avatar" column="avatar"/>
+		<result property="sex" column="sex"/>
+		<result property="provinceId" column="province_id"/>
+		<result property="cityId" column="city_id"/>
+		<result property="areaId" column="area_id"/>
+		<result property="signature" column="signature" />
+		<result property="initIm" column="init_im" />
+		<result property="client" column="client" />
+		<result property="deviceToken" column="device_token" />
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+</mapper>

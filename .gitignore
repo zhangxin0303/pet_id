@@ -1,0 +1,20 @@
+target/
+.mvn/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/*
+!.idea/.name
+*.iws
+*.iml
+*.ipr
+!src/main/resources/jni/jnisigcheck.dll
+src/main/resources/application-dev.yml

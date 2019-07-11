@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.user.AppUserDao">
+	
+	<resultMap id="appUserMap" type="com.cqcej.web.modules.app.entity.user.AppUserEntity"
+	           extends="com.cqcej.web.modules.common.dao.UserDao.userMap">
+		<result property="provinceName" column="province_name"/>
+		<result property="cityName" column="city_name"/>
+		<result property="areaName" column="area_name"/>
+		<collection property="pets" ofType="com.cqcej.web.modules.common.entity.UserPetsEntity"
+		            javaType="ArrayList" column="user_id"
+		            select="com.cqcej.web.modules.common.dao.UserPetsDao.getUserPets"/>
+	</resultMap>
+	
+	<select id="queryByMobileOrEmail" resultType="com.cqcej.web.modules.common.entity.UserEntity">
+		select *
+		from ct_user
+		where mobile = #{account} or email = #{account}
+	</select>
+	
+	<select id="selectUserPage" resultType="com.cqcej.web.modules.common.entity.UserEntity"
+	        parameterType="com.baomidou.mybatisplus.plugins.Page">
+		select
+			ct_user.*,
+			province.area_name as province_name,
+			city.area_name     as city_name,
+			area.area_name     as area_name
+		from ct_user
+			left join ct_area as province on province.area_id = province_id
+			left join ct_area as city on city.area_id = city_id
+			left join ct_area as area on area.area_id = ct_user.area_id
+	</select>
+	
+	<select id="getUserInfo" resultMap="appUserMap">
+		select
+			ct_user.*,
+			province.area_name as province_name,
+			city.area_name     as city_name,
+			area.area_name     as area_name
+		from ct_user
+			left join ct_area as province on province.area_id = province_id
+			left join ct_area as city on city.area_id = city_id
+			left join ct_area as area on area.area_id = ct_user.area_id
+		where user_id = #{userId}
+	</select>
+
+	<select id="selectCardList" resultType="com.cqcej.web.modules.app.entity.dto.MechUserCardsDTO">
+		select
+			b.bank_name,
+			ubc.bank_no
+		from ct_user_bank_card ubc
+		LEFT JOIN ct_bank b on ubc.bank_id = b.bank_id
+		where ubc.user_id = #{userId}
+	</select>
+
+	<select id="isWatch" resultType="java.lang.Long">
+		select watch_id from ct_user_watch where user_id = #{userId} and watch_user_id = #{targetId}
+	</select>
+
+	<select id="isSign" resultType="java.lang.Integer">
+        select count(*) from ct_user_sign where date(create_at) = date(now()) and user_id = #{userId}
+    </select>
+</mapper>

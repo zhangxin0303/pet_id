@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.user.AppUserFavoriteDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.app.entity.UserFavoriteEntity" id="userFavoriteMap">
+		<result property="favoriteId" column="favorite_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="favoriteType" column="favorite_type"/>
+		<result property="objectId" column="object_id"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+	
+	<resultMap id="userClinicFavorite" type="com.cqcej.web.modules.app.entity.UserFavoriteEntity"
+	           extends="userFavoriteMap">
+		<association property="object" javaType="com.cqcej.web.modules.app.entity.home.AppMechanismEntity"
+		             column="object_id" select="selectMechanism">
+		</association>
+	</resultMap>
+	
+	<resultMap id="userCommunityFavorite" type="com.cqcej.web.modules.app.entity.UserFavoriteEntity"
+	           extends="userFavoriteMap">
+		<association property="object" javaType="com.cqcej.web.modules.app.entity.AppCommunityEntity"
+		             column="object_id" select="selectCommunity">
+		</association>
+	</resultMap>
+	
+	<select id="selectMechanism" parameterType="java.lang.String"
+	        resultMap="com.cqcej.web.modules.app.dao.home.AppMechanismDao.appMechanismMapList">
+		select
+			m.*,
+			a.area_name,
+			(select image_url
+			 from ct_mechanism_images mi
+			 where mi.mechanism_id = m.mechanism_id
+			 limit 1) as image_url
+		from ct_mechanism m
+			left join ct_area as a on a.area_id = m.area_id
+		where mechanism_id = #{objectId}
+	</select>
+	
+	<select id="getFavoriteClinic" resultMap="userClinicFavorite">
+		select *
+		from ct_user_favorite
+		where user_id = #{userId} and
+		      favorite_type = ${@com.cqcej.web.modules.app.entity.UserFavoriteEntity@FAVORITE_TYPE_CLINIC}
+		order by create_at desc
+		limit #{start}, #{size}
+	</select>
+	
+	<select id="selectCommunity" parameterType="java.lang.String"
+	        resultMap="com.cqcej.web.modules.app.dao.AppCommunityDao.appCommunityMap">
+		select
+			c.*,
+			u.avatar                                 as user_avatar,
+			u.nickname                               as user_nickname,
+			(select ca.attach_url
+			 from ct_community_attach ca
+			 where ca.community_id = c.community_id) as image_url
+		from ct_community c
+			left join ct_user u on u.user_id = c.user_id
+		where community_id = #{objectId}
+	</select>
+	
+	<select id="getFavoriteCommunity" resultMap="userCommunityFavorite">
+		select *
+		from ct_user_favorite
+		where user_id = #{userId} and
+		      favorite_type = ${@com.cqcej.web.modules.app.entity.UserFavoriteEntity@FAVORITE_TYPE_COMMUNITY}
+		order by create_at desc
+		limit #{start}, #{size}
+	</select>
+</mapper>

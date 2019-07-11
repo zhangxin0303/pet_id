@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminAgreementDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminAgreementEntity" id="adminAgreementMap">
+        <result property="agreeId" column="agree_id"/>
+        <result property="agreeCode" column="agree_code"/>
+        <result property="agreeName" column="agree_name"/>
+        <result property="agreeContent" column="agree_content"/>
+    </resultMap>
+
+    <!--协议列表-->
+    <select id="list" resultMap="adminAgreementMap">
+        select * from ct_agreement where agree_type = 1
+    </select>
+
+    <!--邮箱列表-->
+    <select id="getMailList" resultMap="adminAgreementMap">
+        select * from ct_agreement where agree_type = 2
+        limit #{start},#{size}
+    </select>
+    <!--邮箱列表总数-->
+    <select id="getMailListCount" resultType="java.lang.Integer">
+        select count(*) from ct_agreement where agree_type = 2
+    </select>
+
+    <select id="getById" resultMap="adminAgreementMap">
+        select * from ct_agreement where agree_id = #{agreeId}
+    </select>
+
+    <insert id="saveAgree">
+        insert into ct_agreement(agree_code,agree_name,agree_content,agree_type,create_time)
+         values (#{agreeCode},#{agreeName},#{agreeContent},1,now())
+    </insert>
+
+    <insert id="saveMail">
+        insert into ct_agreement(agree_code,agree_name,agree_content,agree_type,create_time)
+         values (#{agreeCode},#{agreeName},#{agreeContent},2,now())
+    </insert>
+
+    <update id="updateAgree">
+        update ct_agreement
+          <set>
+              <if test="agreeCode != null">
+                  agree_code = #{agreeCode},
+              </if>
+              <if test="agreeName != null">
+                  agree_name = #{agreeName},
+              </if>
+              <if test="agreeContent != null">
+                  agree_content = #{agreeContent}
+              </if>
+          </set>
+        where agree_id = #{agreeId}
+    </update>
+
+    <delete id="deleteAgree">
+        delete from ct_agreement where agree_id = #{agreeId}
+    </delete>
+</mapper>

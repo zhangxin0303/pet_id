@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminSysRoleDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminSysRoleEntity" id="sysRoleMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="roleId" column="role_id"/>
+        <result property="mobile" column="mobile"/>
+        <result property="userName" column="username"/>
+        <result property="roleName" column="role_name"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <!-- 管理员列表-->
+    <select id="getRoleList" resultMap="sysRoleMap">
+      	SELECT
+            sur.id,
+            sur.user_id,
+            sur.role_id,
+            su.mobile,
+            su.username,
+            sr.role_name,
+            su.`status`
+        FROM
+        `ct_sys_user_role` sur
+        LEFT JOIN ct_sys_role sr on sur.role_id = sr.role_id
+        LEFT JOIN ct_sys_user su on sur.user_id = su.user_id
+        <where>
+            <if test="roleType != null and roleType != ''">
+                sr.role_name = #{roleType}
+            </if>
+            <if test="userName != null and userName != ''">
+                and su.username like concat(concat('%',#{userName}),'%')
+            </if>
+            <if test="userId != null and userId != ''">
+                and sr.create_user_id = #{userId}
+            </if>
+            <if test="userId == null">
+                and su.create_user_id != 0
+            </if>
+        </where>
+        limit #{start},#{size}
+    </select>
+
+
+    <!-- 管理员列表总数-->
+    <select id="getRoleListCount" resultType="java.lang.Integer">
+        SELECT
+          count(*)
+        FROM
+        `ct_sys_user_role` sur
+        LEFT JOIN ct_sys_role sr on sur.role_id = sr.role_id
+        LEFT JOIN ct_sys_user su on sur.user_id = su.user_id
+        <where>
+            <if test="roleType != null and roleType != ''">
+                sr.role_name = #{roleType}
+            </if>
+            <if test="userName != null and userName != ''">
+                and su.username like concat(concat('%',#{userName}),'%')
+            </if>
+            <if test="userId != null and userId != ''">
+                and sr.create_user_id = #{userId}
+            </if>
+            <if test="userId == null">
+                and su.create_user_id != 0
+            </if>
+        </where>
+    </select>
+
+    <!-- 删除角色(从用户_角色中间表中删除数据)-->
+    <delete id="deleteBySysUserRoleId">
+        delete from ct_sys_user_role where id = #{id}
+    </delete>
+
+    <!-- 获取角色类型列表-->
+    <select id="select" resultMap="sysRoleMap">
+        SELECT
+          role_id,
+          role_name
+          FROM
+          ct_sys_role
+    </select>
+
+    <!-- 查询单个角色-->
+    <select id="selectRoleById" resultMap="sysRoleMap">
+        SELECT
+        sur.id,
+        sur.user_id,
+        sur.role_id,
+        su.mobile,
+        su.username,
+        sr.role_name,
+        su.`status`,
+        su.password
+        FROM
+        `ct_sys_user_role` sur
+        LEFT JOIN ct_sys_role sr on sur.role_id = sr.role_id
+        LEFT JOIN ct_sys_user su on sur.user_id = su.user_id
+        where sur.id = #{id}
+    </select>
+
+    <!-- 修改role-->
+    <update id="updateRole">
+        update ct_sys_role
+        <set>
+            <if test="roleName != null">
+                role_name = #{roleName},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where role_id = #{roleId}
+    </update>
+    <!-- 修改中间表-->
+    <update id="updateSysUerRole">
+        update ct_sys_user_role set role_id = #{roleId} where id = #{id}
+    </update>
+    <!--&lt;!&ndash; 添加角色&ndash;&gt;-->
+    <!--<insert id="saveRole">-->
+        <!--<selectKey keyProperty="userId" order="AFTER" resultType="java.lang.Long">-->
+            <!--SELECT LAST_INSERT_ID()-->
+        <!--</selectKey>-->
+        <!--insert into-->
+          <!--ct_sys_user(mobile,username,newPassword,create_user_id,create_time)-->
+          <!--values (#{mobile},#{username},#{newPassword},#{createUserId},NOW())-->
+    <!--</insert>-->
+    <!-- 添加角色-->
+    <insert id="saveRole">
+        insert into
+          ct_sys_role(role_name,remark,create_user_id,create_time)
+          values (#{roleName},#{remark},#{createUserId},NOW())
+    </insert>
+
+    <!-- 添加中间表-->
+    <insert id="saveUserRole">
+        insert into ct_sys_user_role(user_id, role_id) values (#{userId},#{roleId})
+    </insert>
+
+    <!-- 重置密码-->
+    <update id="reset">
+        update ct_sys_user set password = #{password} where user_id = #{userId}
+    </update>
+
+    <!-- 禁用管理员-->
+    <update id="stopUser">
+        update ct_sys_user set status = #{status} where user_id = #{userId}
+    </update>
+
+    <!-- 禁用角色-->
+    <update id="stopRole">
+        update ct_sys_role set status = #{status} where role_id = #{roleId}
+    </update>
+
+    <!-- 所有用户-->
+    <select id="selectUsers" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetUserEntity">
+        select user_id,username from ct_sys_user
+    </select>
+
+    <!-- 用户的所有角色-->
+    <select id="selectUserRole" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetRoleEntity">
+        select
+            sr.role_id,
+            sr.role_name
+        from ct_sys_role sr
+        LEFT JOIN ct_sys_user_role sur on sr.role_id=sur.role_id
+        <where>
+            <if test="userId != null">
+                sur.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+    <!-- 系统所有角色-->
+    <select id="selectRoles" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetRoleEntity">
+        select
+        sr.role_id,
+        sr.role_name,
+        sr.remark,
+        sr.status
+        from ct_sys_role sr
+        <where>
+            <if test="roleName != null and roleName != ''">
+                sr.role_name like concat('%',#{roleName},'%')
+            </if>
+            and sr.create_user_id != 0
+        </where>
+        limit #{start},#{size}
+    </select>
+    <!-- 系统所有角色总数-->
+    <select id="selectRolesCount" resultType="java.lang.Integer">
+        select count(*) from ct_sys_role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                role_name like concat('%',#{roleName},'%')
+            </if>
+        </where>
+    </select>
+    <!-- 系统所有角色(id.name)-->
+    <select id="selectRole" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetRoleEntity">
+        select
+          sr.role_id,
+          sr.role_name
+        from ct_sys_role sr
+    </select>
+
+    <!-- 为用户分配角色-->
+    <insert id="saveUserRoles">
+        <if test="roleIds != null">
+            insert into ct_sys_user_role(user_id,role_id) values
+            <foreach collection="roleIds" separator="," item="roleId">
+                (#{userId},#{roleId})
+            </foreach>
+        </if>
+    </insert>
+    <!-- 删除中间表原有的角色分配，重新分配-->
+    <delete id="deleteUserRole">
+        delete from ct_sys_user_role where user_id = #{userId}
+    </delete>
+
+    <!-- 角色的所有菜单-->
+    <select id="selectRoleMenus" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetMenuEntity">
+        select
+            sm.menu_id,
+            sm.`name`
+        from ct_sys_menu sm
+        LEFT JOIN ct_sys_role_menu srm on sm.menu_id = srm.menu_id
+        <where>
+            <if test="roleId != null">
+                srm.role_id = #{roleId}
+            </if>
+        </where>
+    </select>
+    <!-- 查询系统所有菜单-->
+    <select id="selectMenus" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetMenuEntity">
+        select menu_id as menuId,name from ct_sys_menu where parent_id = 1
+    </select>
+
+    <!-- 查询菜单所有子菜单-->
+    <select id="selectSubMenus" resultType="com.cqcej.web.modules.admin.entity.userRoleMenu.SetMenuEntity">
+        select menu_id as menuId,name from ct_sys_menu where parent_id  = #{menuId}
+    </select>
+
+    <!-- 删除角色-->
+    <delete id="deleteBySysRoleId">
+        delete from ct_sys_role where role_id = #{roleId}
+    </delete>
+    <!-- 删除中间表原有的菜单分配，重新分配-->
+    <delete id="deleteRoleMenus">
+        delete from ct_sys_role_menu where role_id = #{roleId}
+    </delete>
+
+    <!-- 重新分配角色-->
+    <insert id="saveRoleMenus">
+        <if test="menuIds != null">
+            insert into ct_sys_role_menu(role_id,menu_id) values
+            <foreach collection="menuIds" separator="," item="menuId">
+                (#{roleId},#{menuId})
+            </foreach>
+        </if>
+    </insert>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

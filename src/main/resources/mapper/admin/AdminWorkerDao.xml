@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminWorkerDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminWorkerEntity" id="workerMap">
+        <result property="workerId" column="worker_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="mechanismId" column="mechanism_id"/>
+        <result property="petClassId" column="pet_class_id"/>
+        <result property="workerType" column="worker_type"/>
+        <result property="workerDescription" column="worker_description"/>
+        <result property="goodAt" column="good_at"/>
+        <result property="chatFee" column="chat_fee"/>
+        <result property="telephoneFee" column="telephone_fee"/>
+        <result property="ondoorFee" column="ondoor_fee"/>
+        <result property="transportFee" column="transport_fee"/>
+        <result property="walkDogFee" column="walk_dog_fee"/>
+        <result property="consultCount" column="consult_count"/>
+        <result property="transportCount" column="transport_count"/>
+        <result property="walkDogCount" column="walk_dog_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="goodCommentCount" column="good_comment_count"/>
+        <result property="replyIn24HoursCount" column="reply_in_24_hours_count"/>
+        <result property="isRecommend" column="is_recommend"/>
+        <result property="recommendAt" column="recommend_at"/>
+        <result property="sort" column="sort"/>
+        <result property="createAt" column="create_at"/>
+    </resultMap>
+
+
+    <!-- 接送人员信息-->
+    <select id="selectPickUp" resultType="com.cqcej.web.modules.admin.entity.AdminPickUpEntity">
+        SELECT
+        w.worker_id,
+        u.realname,
+        u.sex,
+        w.type,
+        u.mobile,
+        w.worker_status
+        from ct_worker w
+        LEFT JOIN ct_user u on w.user_id = u.user_id
+        LEFT JOIN ct_mechanism m on m.mechanism_id = w.mechanism_id
+        where (w.worker_type = 21 or w.worker_type = 22)
+        <if test="workerStatus != null and workerStatus != ''">
+            and w.worker_status = #{workerStatus}
+        </if>
+        <if test="workerId != null and workerId != ''">
+            and w.worker_id = #{workerId}
+        </if>
+        <if test="realname != null and realname != ''">
+            and u.realname like concat('%',#{realname},'%')
+        </if>
+    </select>
+
+    <!-- 接送人员数量-->
+    <select id="selectPickUpCount" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        from ct_worker w
+        LEFT JOIN ct_user u on w.user_id = u.user_id
+        LEFT JOIN ct_mechanism m on m.mechanism_id = w.mechanism_id
+        where (w.worker_type = 21 or w.worker_type = 22)
+        <if test="workerStatus != null and workerStatus != ''">
+            and w.worker_status = #{workerStatus}
+        </if>
+        <if test="workerId != null and workerId != ''">
+            and w.worker_id = #{workerId}
+        </if>
+        <if test="realname != null and realname != ''">
+            and u.realname like concat('%',#{realname},'%')
+        </if>
+    </select>
+
+    <!-- 接送人员在线，离线人数-->
+    <select id="selectWorkerCount" resultType="java.lang.Integer">
+        SELECT
+          count(*)
+        from ct_worker w
+        LEFT JOIN ct_user u on w.user_id = u.user_id
+        where (w.worker_type = 21 or w.worker_type = 22)
+        and w.status = #{status}
+        <if test="realname != null and realname != ''">
+            and u.realname like concat('%',#{realname},'%')
+        </if>
+    </select>
+
+    <!-- 接送人员信息-->
+    <select id="selectWorkerLocation" resultType="com.cqcej.web.modules.admin.entity.AdminPickUpEntity">
+        SELECT
+            w.worker_id,
+            u.realname,
+            w.worker_status,
+            w.longitude,
+            w.latitude
+        from ct_worker w
+        LEFT JOIN ct_user u on w.user_id = u.user_id
+        where (w.worker_type = 21 or w.worker_type = 22)
+        and w.status = #{status}
+        <if test="realname != null and realname != ''">
+            and u.realname like concat('%',#{realname},'%')
+        </if>
+        limit #{start},#{size}
+    </select>
+
+    <!-- 基本信息-->
+    <select id="getPickUp" resultType="com.cqcej.web.modules.admin.entity.AdminUserEntity">
+      select
+        u.user_id,
+        w.worker_id,
+        w.type,
+        w.worker_type,
+		u.realname,
+		u.sex,
+		u.avatar,
+		u.mobile,
+		w.walk_dog_fee
+	  from ct_user u
+	  LEFT JOIN ct_worker w on u.user_id = w.user_id
+	  where w.worker_id = #{workerId}
+    </select>
+    <!-- 详细信息-->
+    <select id="detail" resultType="com.cqcej.web.modules.admin.entity.AdminBankCardEntity">
+        select
+            b.bank_name,
+            bc.bank_no,
+            bc.name
+        from ct_user_bank_card bc
+        LEFT JOIN ct_bank b on bc.bank_id = b.bank_id
+        LEFT JOIN ct_user u on u.user_id = bc.user_id
+        LEFT JOIN ct_worker w on w.user_id = u.user_id
+	    where w.worker_id = #{workerId}
+    </select>
+
+    <!-- 添加-->
+    <!--增加用户(接送人员)-->
+    <insert id="insertUserOfPickUp" parameterType="com.cqcej.web.modules.admin.entity.AdminUserEntity"
+            useGeneratedKeys="true" keyProperty="userId">
+        insert into ct_user(nickname,realname,mobile,password,sex,avatar,user_type,create_at)
+        values (#{realname},#{realname},#{mobile},#{password},#{sex},#{avatar},#{workerType},now())
+    </insert>
+
+    <!-- 增加工作者(接送人员)-->
+    <insert id="insertWorkerOfPickUp">
+        insert into ct_worker(user_id,type,worker_type,create_at)
+        values (#{userId},1,#{workerType},now())
+    </insert>
+
+
+    <!-- 修改user-->
+    <update id="updateUserById">
+        update ct_user
+        <set>
+            <if test="realname != null">
+                realname = #{realname},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="mobile != null">
+                mobile = #{mobile}
+            </if>
+        </set>
+        where user_id = #{userId}
+    </update>
+    <!-- 修改worker-->
+    <update id="updateWorker">
+        update ct_worker
+        <set>
+            <if test="walkDogFee != null">
+                walk_dog_fee = #{walkDogFee},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="workerType != null">
+                worker_type = #{workerType}
+            </if>
+        </set>
+        where worker_id = #{workerId}
+    </update>
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppArticleDao">
+	<resultMap id="appArticleMap" type="com.cqcej.web.modules.app.entity.home.AppArticleEntity"
+		extends="com.cqcej.web.modules.common.dao.ArticleDao.articleMap">
+		
+	</resultMap>
+	
+	<select id="getHomeArticle" resultMap="appArticleMap">
+		select *
+		from ct_article
+		where article_type = #{type}
+		order by sort desc, is_recommend desc, create_at desc
+		limit 5
+	</select>
+</mapper>

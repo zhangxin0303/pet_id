@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppMechanismDao">
+	<!-- 基础列表 -->
+	<resultMap id="appMechanismMap" type="com.cqcej.web.modules.app.entity.home.AppMechanismEntity"
+	           extends="com.cqcej.web.modules.common.dao.MechanismDao.mechanismMap">
+		<result property="areaName" column="area_name"/>
+	</resultMap>
+	
+	<!-- 机构列表 -->
+	<resultMap id="appMechanismMapList" type="com.cqcej.web.modules.app.entity.home.AppMechanismEntity"
+	           extends="appMechanismMap">
+		<collection property="banners" column="mechanism_id"
+		            select="com.cqcej.web.modules.app.dao.home.AppMechanismImagesDao.getMechanismBanners"
+		            ofType="com.cqcej.web.modules.app.entity.home.AppMechanismImagesEntity"/>
+	</resultMap>
+	
+	<!-- 机构详情 -->
+	<resultMap id="appMechanismMapDetail" type="com.cqcej.web.modules.app.entity.home.AppMechanismEntity"
+	           extends="appMechanismMap">
+		<result property="favorite" javaType="boolean" jdbcType="BIGINT" column="favorite_id"
+		        typeHandler="com.cqcej.web.modules.app.handler.ExistsTypeHandler"/>
+		
+		<collection property="banners" column="mechanism_id"
+		            select="com.cqcej.web.modules.app.dao.home.AppMechanismImagesDao.getMechanismBanners"
+		            ofType="com.cqcej.web.modules.app.entity.home.AppMechanismImagesEntity"/>
+	</resultMap>
+	
+	<select id="getClinicList" resultMap="appMechanismMapList">
+		select
+		m.*,
+		a.area_name,
+		st_distance(point(#{longitude}, #{latitude}), point(m.longitude, m.latitude)) as distance
+		from ct_mechanism m
+		left join ct_area as a on a.area_id = m.area_id
+		where mechanism_type &amp; ${@com.cqcej.web.modules.common.entity.MechanismEntity@MECHANISM_TYPE_CLINIC}
+		<if test="sortType == 0">
+			and m.is_recommend = 1
+		</if>
+		<if test="petClassId != 0">
+			and m.pet_class_id = #{petClassId}
+		</if>
+		order by
+		<choose>
+			<when test="sortType == 0">
+				<!-- 推荐诊所 -->
+				recommend_at desc
+			</when>
+			<when test="sortType == 1">
+				<!-- 附近诊所 -->
+				distance asc
+			</when>
+		</choose>
+		limit #{start}, #{size}
+	</select>
+	
+	<select id="getClinicDetail" resultMap="appMechanismMapDetail">
+		select
+			m.*,
+			a.area_name,
+			uf.favorite_id
+		from ct_mechanism m
+			left join ct_area a on a.area_id = m.area_id
+			left join ct_user_favorite uf on uf.object_id = m.mechanism_id and uf.user_id = #{userId} and uf.favorite_type = 1
+		where mechanism_id = #{clinicId}
+	</select>
+	
+	<select id="isFavorite" resultType="Integer">
+		select count(*)
+		from ct_user_favorite
+		where user_id = #{userId}
+	</select>
+	
+	<select id="getMechanismRecommend" resultMap="appMechanismMapList">
+		select
+			m.*,
+			a.area_name
+		from ct_mechanism m
+			left join ct_area as a on a.area_id = m.area_id
+		where mechanism_type &amp; #{type} and m.is_recommend = 1
+		order by recommend_at desc
+		limit 4
+	</select>
+	
+	<select id="getNewestMechanism" resultMap="appMechanismMapList">
+		select
+			m.*,
+			a.area_name
+		from ct_mechanism m
+			left join ct_area as a on a.area_id = m.area_id
+		where mechanism_type &amp; #{type}
+		order by create_at desc
+		limit 4
+	</select>
+	<select id="commentUpdate">
+		update ct_mechanism
+		set total_stars = total_stars + #{star}, comment_count = comment_count + 1, stars = #{average}
+		where mechanism_id = #{mechanismId}
+	</select>
+	
+	<select id="getMechanismDetailWithUserId"
+	        resultType="com.cqcej.web.modules.app.entity.home.AppMechanismEntity">
+		select
+			   m.*,
+			   (select image_url
+	            from ct_mechanism_images mi
+	            where mi.mechanism_id = m.mechanism_id
+	            limit 1) as thumbImageUrl
+		from ct_mechanism m
+		where user_id=#{userId}
+	</select>
+	
+	<select id="check" resultType="com.cqcej.web.modules.app.entity.home.AppMechanismEntity">
+		select * from ct_mechanism where mechanism_id = #{mechId} and user_id = #{userId}
+	</select>
+
+	<select id="images" resultType="java.lang.String">
+        select image_url from ct_mechanism_images where mechanism_id = #{mechId}
+    </select>
+
+	<!-- 店铺信息-->
+	<select id="mechInfo" resultType="com.cqcej.web.modules.app.entity.dto.MechMechanismDTO">
+        select
+            m.mechanism_name,
+            m.telephone,
+            m.business_license,
+            u.realname,
+            u.id_card,
+            u.mobile,
+            m.province_id,
+            m.city_id,
+            m.area_id,
+            m.address,
+            m.keywords,
+            m.business_time,
+            m.description,
+            m.mechanism_type,
+            m.logo_url
+        from ct_mechanism m
+        LEFT JOIN ct_user u on m.user_id = u.user_id
+        where mechanism_id = #{mechId}
+    </select>
+
+	<!-- 删除轮播图-->
+	<insert id="deleteImages" parameterType="java.util.List">
+        delete from ct_mechanism_images where mechanism_id = #{mechId}
+    </insert>
+
+	<!-- 修改轮播图-->
+	<insert id="updateImages" parameterType="java.util.List">
+		insert into ct_mechanism_images (mechanism_id,image_url,create_at) values
+		<foreach collection="images" item="img" index="index" separator=",">
+			(#{mechId},#{img},now())
+		</foreach>
+	</insert>
+
+	<!-- 修改商户&用户信息信息-->
+	<update id="updateMech">
+		update ct_mechanism m,ct_user u
+		<set>
+			<if test="mechanismName != null">
+				m.mechanism_name = #{mechanismName},
+			</if>
+			<if test="businessLicense != null">
+				m.business_license = #{businessLicense},
+			</if>
+			<if test="realname != null">
+				u.realname = #{realname},
+			</if>
+			<if test="idCard != null">
+				u.id_card = #{idCard},
+			</if>
+			<if test="telephone != null">
+				m.telephone = #{telephone},
+			</if>
+			<if test="provinceId != null">
+				m.province_id = #{provinceId},
+			</if>
+			<if test="cityId != null">
+				m.city_id = #{cityId},
+			</if>
+			<if test="areaId != null">
+				m.area_id = #{areaId},
+			</if>
+			<if test="address != null">
+				m.address = #{address},
+			</if>
+			<if test="keywords != null">
+				m.keywords = #{keywords},
+			</if>
+			<if test="businessTime != null">
+				m.business_time = #{businessTime},
+			</if>
+			<if test="description != null">
+				m.description = #{description},
+			</if>
+			<if test="mechanismType != null">
+				m.mechanism_type = #{mechanismType},
+			</if>
+			<if test="logoUrl != null">
+				m.logo_url = #{logoUrl}
+			</if>
+		</set>
+		where m.mechanism_id = #{mechanismId} and u.user_id = #{userId}
+	</update>
+</mapper>

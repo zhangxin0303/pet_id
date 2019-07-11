@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminMechanismDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminMechanismEntity" id="mechanismMap">
+        <result property="mechanismId" column="mechanism_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="petClassId" column="pet_class_id"/>
+        <result property="mechanismType" column="mechanism_type"/>
+        <result property="mechanismName" column="mechanism_name"/>
+        <result property="keywords" column="keywords"/>
+        <result property="telephone" column="telephone"/>
+        <result property="provinceId" column="province_id"/>
+        <result property="cityId" column="city_id"/>
+        <result property="areaId" column="area_id"/>
+        <result property="address" column="address"/>
+        <result property="description" column="description"/>
+        <result property="businessTime" column="business_time"/>
+        <result property="stars" column="stars"/>
+        <result property="totalStars" column="total_stars"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="isRecommend" column="is_recommend"/>
+        <result property="recommendAt" column="recommend_at"/>
+        <result property="sold" column="sold"/>
+        <result property="favoriteCount" column="favorite_count"/>
+        <result property="createAt" column="create_at"/>
+        <result property="mechanismStatus" column="mechanism_status"/>
+        <result property="nickname" column="nickname"/>
+    </resultMap>
+
+    <!-- //商户信息总数-->
+    <select id="getMechanismCount" resultType="java.lang.Integer">
+        select
+        count(*)
+        from ct_mechanism AS m
+        LEFT JOIN ct_user AS u on m.user_id = u.user_id
+        <where>
+            <if test="mechanismType != null and mechanismType != ''">
+                m.mechanism_type = #{mechanismType}
+            </if>
+            <if test="status != null and status != ''">
+                and m.mechanism_status = #{status}
+            </if>
+            <if test="mechanismName != null and mechanismName != ''">
+                and m.mechanism_name like concat(concat('%',#{mechanismName}),'%')
+            </if>
+        </where>
+    </select>
+
+
+    <!-- //商户信息-->
+    <select id="getMechanismList" resultMap="mechanismMap">
+        select
+        m.mechanism_id,
+        m.mechanism_name,
+        mechanism_type,
+        u.nickname,
+        m.telephone,
+        m.mechanism_status
+        from ct_mechanism AS m
+        LEFT JOIN ct_user AS u on m.user_id = u.user_id
+        <where>
+            <if test="mechanismType != null and mechanismType != ''">
+                m.mechanism_type = #{mechanismType}
+            </if>
+            <if test="mechanismStatus != null and mechanismStatus != ''">
+                and m.mechanism_status = #{mechanismStatus}
+            </if>
+            <if test="mechanismName != null and mechanismName != ''">
+                and m.mechanism_name like concat(concat('%',#{mechanismName}),'%')
+            </if>
+        </where>
+        order by m.create_at DESC
+        limit #{start},#{size}
+    </select>
+
+    <!-- 店内医师-->
+    <select id="doctorList" resultType="com.cqcej.web.modules.admin.entity.mechanism.DoctorEntity">
+        select
+            w.worker_id,
+            u.user_id,
+            u.realname,
+            w.chat_fee,
+            w.telephone_fee,
+            w.good_at,
+            w.ondoor_fee,
+            w.worker_description,
+            u.avatar
+        from ct_worker w
+        LEFT JOIN ct_user u on u.user_id = w.user_id
+        LEFT JOIN ct_mechanism m on m.mechanism_id = w.mechanism_id
+        where m.mechanism_id = #{mechanismId}
+        limit #{start},#{size}
+    </select>
+
+    <!-- 店内医师count-->
+    <select id="doctorListCount" resultType="java.lang.Integer">
+        select
+            count(*)
+        from ct_worker w
+        LEFT JOIN ct_user u on u.user_id = w.user_id
+        LEFT JOIN ct_mechanism m on m.mechanism_id = w.mechanism_id
+        where m.mechanism_id = #{mechanismId}
+    </select>
+
+    <!-- 店内服务-->
+    <select id="serviceList" resultType="com.cqcej.web.modules.admin.entity.mechanism.ServiceEntity">
+        select mechanism_service_id,service_name,service_price from ct_mechanism_service where mechanism_id = #{mechanismId}
+        limit #{start},#{size}
+    </select>
+
+    <!-- 店内服务count-->
+    <select id="serviceListCount" resultType="java.lang.Integer">
+        select count(*) from ct_mechanism_service where mechanism_id = #{mechanismId}
+    </select>
+
+    <!-- 修改店内服务-->
+    <update id="updateService">
+        update ct_mechanism_service ms
+          <set>
+              <if test="serviceName != null">
+                 ms.service_name = #{serviceName},
+              </if>
+              <if test="servicePrice != null">
+                 ms.service_price = #{servicePrice}
+              </if>
+          </set>
+        where ms.mechanism_service_id = #{mechanismServiceId}
+    </update>
+    <!-- update医师and 用户-->
+    <update id="updateDoctor">
+        update ct_worker w,ct_user u
+        <set>
+            <!-- 用户表-->
+            <if test="realname != null">
+                u.realname = #{realname},
+            </if>
+            <if test="avatar != null">
+                u.avatar = #{avatar},
+            </if>
+            <!-- 医师表-->
+            <if test="chatFee != null">
+                w.chat_fee = #{chatFee},
+            </if>
+            <if test="telephoneFee != null">
+                w.telephone_fee = #{telephoneFee},
+            </if>
+            <if test="workerDescription != null">
+                w.worker_description = #{workerDescription},
+            </if>
+            <if test="goodAt != null">
+                w.good_at = #{goodAt},
+            </if>
+            <if test="ondoorFee != null">
+                w.ondoor_fee = #{ondoorFee}
+            </if>
+        </set>
+        where w.worker_id = #{workerId} and u.user_id = #{userId}
+    </update>
+
+    <!-- 锁定商户-->
+    <update id="lockById">
+        update ct_mechanism set mechanism_status = 3 where mechanism_id  = #{mechanismId}
+    </update>
+
+    <!-- 删除商户-->
+    <delete id="deleteMechanismById">
+        delete from ct_mechanism where mechanism_id = #{mechanismId}
+    </delete>
+
+    <!-- 基本信息-->
+    <select id="selectBasicMessage" resultType="com.cqcej.web.modules.admin.entity.mechanism.MechanBasicEntity">
+        select
+            m.mechanism_id,
+            u.user_id,
+            m.mechanism_name,
+            m.mechanism_type,
+            u.id_card,
+            u.realname,
+            u.mobile,
+            m.province_id,
+            m.city_id,
+            m.area_id,
+            m.address
+        FROM ct_mechanism m
+        LEFT JOIN ct_user u on u.user_id = m.user_id
+        where m.mechanism_id = #{mechanismId}
+    </select>
+
+    <!-- 银行卡信息-->
+    <select id="selectBankCardMsg" resultType="com.cqcej.web.modules.admin.entity.AdminBankCardEntity">
+        select
+            b.bank_name,
+            bc.bank_no,
+            bc.name
+        from ct_user_bank_card bc
+        LEFT JOIN ct_bank b on bc.bank_id = b.bank_id
+        LEFT JOIN ct_user u on u.user_id = bc.user_id
+		LEFT JOIN ct_mechanism m on m.user_id = u.user_id
+		where m.mechanism_id = #{mechanismId}
+    </select>
+
+
+    <!-- 详细信息-->
+    <select id="selectDetailMessage" resultType="com.cqcej.web.modules.admin.entity.mechanism.DetailEntity">
+        select
+            m.mechanism_id,
+            keywords,
+            business_time,
+            description,
+            business_license,
+            logo_url,
+            mechanism_status,
+            mechanism_type
+            from ct_mechanism m
+        where m.mechanism_id = #{mechanismId}
+    </select>
+
+    <!-- 图片-->
+    <select id="selectImages" resultType="java.lang.String">
+        select image_url from ct_mechanism_images where mechanism_id = #{mechanismId}
+    </select>
+
+    <!-- 服务范围-->
+    <select id="selectServiceTypes" resultType="java.lang.Integer">
+        select distinct(service_type) from ct_mechanism_service where mechanism_id = #{mechanismId}
+    </select>
+
+
+
+
+    <!-- 修改基本信息和详细信息-->
+    <update id="updateBasic">
+        update ct_mechanism m,ct_user u
+        <set>
+            <if test="b.mechanismName != null">
+                m.mechanism_name = #{b.mechanismName},
+            </if>
+            <if test="b.realname != null">
+                u.realname = #{b.realname},
+            </if>
+            <if test="b.provinceId != null">
+                m.province_id = #{b.provinceId},
+            </if>
+            <if test="b.cityId != null">
+                m.city_id = #{b.cityId},
+            </if>
+            <if test="b.areaId != null">
+                m.area_id = #{b.areaId},
+            </if>
+            <if test="b.address != null">
+                m.address = #{b.address},
+            </if>
+            <if test="b.mechanismType != null">
+                m.mechanism_type = #{b.mechanismType},
+            </if>
+            <if test="b.mobile != null">
+                u.mobile = #{b.mobile},
+            </if>
+            <if test="b.mechanismType != null">
+                m.mechanism_type = #{b.mechanismType},
+            </if>
+            <!-- 详细信息中的数据-->
+            <if test="d.keywords != null">
+                m.keywords = #{d.keywords},
+            </if>
+            <if test="d.businessTime != null">
+                m.business_time = #{d.businessTime},
+            </if>
+            <if test="d.description != null">
+                m.description = #{d.description},
+            </if>
+            <if test="d.logoUrl != null">
+                m.logo_url = #{d.logoUrl},
+            </if>
+            <if test="d.mechanismStatus != null">
+                m.mechanism_status = #{d.mechanismStatus},
+            </if>
+            <if test="d.businessLicense != null">
+                m.business_license = #{d.businessLicense}
+            </if>
+        </set>
+        where m.mechanism_id = #{b.mechanismId} and u.user_id = #{b.userId}
+    </update>
+
+    <!-- 插入轮播图-->
+    <insert id="updateImages" parameterType="java.util.List">
+        insert into ct_mechanism_images (mechanism_id,image_url,create_at) values
+        <foreach collection ="list" item="img" index= "index" separator =",">
+            (#{mechanismId},#{img},now())
+        </foreach >
+    </insert>
+
+    <!-- 删除轮播图-->
+    <delete id="deleteImage">
+        delete from ct_mechanism_images where image_url = #{imageUrl}
+    </delete>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

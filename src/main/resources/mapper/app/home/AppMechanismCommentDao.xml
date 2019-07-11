@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppMechanismCommentDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap id="appMechanismCommentMap" type="com.cqcej.web.modules.app.entity.home.AppMechanismCommentEntity"
+	           extends="com.cqcej.web.modules.common.dao.MechanismCommentDao.mechanismCommentMap">
+		<result property="serviceName" column="service_name"/>
+		<result property="nickname" column="nickname"/>
+		<result property="userAvatar" column="user_avatar"/>
+		<result property="prised" column="prise_id" javaType="Boolean" jdbcType="BIGINT"
+		        typeHandler="com.cqcej.web.modules.app.handler.ExistsTypeHandler" />
+	</resultMap>
+	<select id="getClinicComments"
+	        resultMap="appMechanismCommentMap">
+		select
+			mc.*,
+			ms.service_name,
+			u.avatar as user_avatar,
+			u.nickname,
+			p.prise_id
+		from ct_mechanism_comment mc
+			left join ct_mechanism_service ms on ms.mechanism_service_id = mc.service_id
+			left join ct_user u on u.user_id = mc.user_id
+			left join ct_user_prise p on p.user_id = #{userId} and object_id = mc.common_id and prise_type = ${@com.cqcej.web.modules.common.entity.UserPriseEntity@PRISE_TYPE_CLINIC_COMMENT}
+		where mc.mechanism_id = #{clinicId}
+		limit #{start}, #{size}
+	</select>
+	
+	<update id="addPriseCount">
+		update ct_mechanism_comment
+		set prise_count = prise_count + 1
+		where common_id = #{objectId}
+	</update>
+	
+	<update id="reducePriseCount">
+		update ct_mechanism_comment
+		set prise_count = prise_count - 1
+		where common_id = #{objectId}
+	</update>
+</mapper>

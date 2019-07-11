@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.AppServiceOrderDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.app.entity.AppServiceOrderEntity" id="appServiceOrderMap"
+               extends="com.cqcej.web.modules.common.dao.ServiceOrderDao.serviceOrderMap">
+        <result property="mechanismName" column="mechanism_name"/>
+        <result property="mechanismImage" column="mechanism_image"/>
+        <result property="workerName" column="worker_name"/>
+        <result property="pickupName" column="pickup_name"/>
+        <result property="serviceName" column="service_name"/>
+        <result property="servicePrice" column="service_price"/>
+        <result property="mechanismLongitude" column="mechanism_longitude"/>
+        <result property="mechanismLatitude" column="mechanism_latitude"/>
+        <result property="petName" column="pet_name"/>
+        <result property="className" column="class_name"/>
+        <result property="workerLongitude" column="workerLongitude"/>
+        <result property="workerLatitude" column="workerLatitude"/>
+        <result property="nickname" column="nickname"/>
+        <result property="userMobile" column="mobile"/>
+
+    </resultMap>
+
+    <resultMap type="com.cqcej.web.modules.app.entity.AppWorkerOrderEntity" id="appWorkerOrderMap"
+               extends="com.cqcej.web.modules.common.dao.ServiceOrderDao.serviceOrderMap">
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="className" column="class_name"/>
+        <result property="userMobile" column="mobile"/>
+        <result property="userLatitude" column="user_latitude"/>
+        <result property="userLongitude" column="user_longitude"/>
+        <result property="attaches" column="attaches" typeHandler="com.cqcej.web.modules.app.handler.UrlTypeHandler"/>
+        <result property="mechanismName" column="mechanism_name"/>
+        <result property="mechanismAddress" column="mechanism_address"/>
+        <result property="mechanismProvinceId" column="mechanism_province_id"/>
+        <result property="mechanismCityId" column="mechanism_city_id"/>
+        <result property="mechanismAreaId" column="mechanism_area_id"/>
+        <result property="mechanismLongitude" column="mechanism_longitude"/>
+        <result property="mechanismLatitude" column="mechanism_latitude"/>
+        <result property="mechanismPhone" column="mechanism_phone"/>
+    </resultMap>
+
+    <resultMap id="serviceOrderDetail" type="com.cqcej.web.modules.app.entity.AppServiceOrderEntity"
+               extends="appServiceOrderMap">
+        <result property="keywords" column="keywords"/>
+        <result property="stars" column="stars"/>
+        <result property="mechanismLatitude" column="latitude"/>
+        <result property="mechanismLongitude" column="longitude"/>
+        <result property="mechanismAreaName" column="mechanism_area_name"/>
+    </resultMap>
+
+    <select id="getUserReservation" resultMap="appServiceOrderMap">
+		select
+			so.*,
+			m.mechanism_name,
+			worker.nickname as worker_name,
+			pickup.nickname as pickup_name,
+			ms.service_name,
+			(select image_url
+			 from ct_mechanism_images mi
+			 where mi.mechanism_id = so.mechanism_id
+			 limit 1)       as mechanism_image
+		from ct_service_order so
+			left join ct_mechanism m on m.mechanism_id = so.mechanism_id
+			left join ct_worker w1 on w1.worker_id = so.worker_id
+			left join ct_user worker on worker.user_id = w1.user_id
+			left join ct_worker w2 on w2.worker_id = so.pickup_id
+			left join ct_user pickup on pickup.user_id = w2.user_id
+			left join ct_mechanism_service ms on ms.mechanism_service_id = so.service_id
+		where so.user_id = #{userId} and order_type = #{type}
+		limit #{start}, #{size}
+	</select>
+
+    <select id="getUserServiceOrder" resultMap="appServiceOrderMap">
+        select
+        so.*,
+        m.mechanism_name,
+        m.keywords,
+        m.stars,
+        m.area_id as mechanism_area_id,
+        m.latitude as mechanism_latitude,
+        m.longitude as mechanism_longitude,
+        a.area_name as mechanism_area_name,
+        worker.nickname as worker_name,
+        pickup.nickname as pickup_name,
+        ms.service_name,
+        (select image_url
+        from ct_mechanism_images mi
+        where mi.mechanism_id = so.mechanism_id
+        limit 1) as mechanism_image
+        from ct_service_order so
+        left join ct_mechanism m on m.mechanism_id = so.mechanism_id
+        left join ct_worker w1 on w1.worker_id = so.worker_id
+        left join ct_user worker on worker.user_id = w1.user_id
+        left join ct_worker w2 on w2.worker_id = so.pickup_id
+        left join ct_user pickup on pickup.user_id = w2.user_id
+        left join ct_mechanism_service ms on ms.mechanism_service_id = so.service_id
+        left join ct_area a on a.area_id = m.area_id
+        where so.user_id = #{userId}
+        <if test="status != -1">
+            and so.order_status = #{status}
+        </if>
+        order by so.order_id desc
+        limit #{start}, #{size}
+    </select>
+    <select id="getUserServiceOrderById"
+            resultType="com.cqcej.web.modules.common.entity.ServiceOrderEntity">
+		select *
+		from ct_service_order
+		where order_id = #{orderId}
+	</select>
+
+    <select id="getServiceOrderByType" resultMap="appWorkerOrderMap">
+        select
+        so.*,
+        u.nickname,
+        u.avatar,
+        u.mobile,
+        ua.longitude as user_longitude,
+        ua.latitude as user_latitude,
+        pc.class_name,
+        m.address as mechanism_address,
+        m.latitude as mechanism_latitude,
+        m.longitude as mechanism_longitude,
+        m.province_id as mechanism_province_id,
+        m.city_id as mechanism_city_id,
+        m.area_id as mechanism_area_id,
+        m.telephone as mechanism_phone,
+        m.mechanism_name,
+        (select group_concat(image_url separator ',') from ct_service_images as csi where csi.order_id = so.order_id) as
+        attaches
+        from ct_service_order so
+        left join ct_user u on u.user_id = so.user_id
+        left join ct_pet_class pc on pc.pet_class_id = so.pet_class_id
+        left join ct_mechanism m on m.mechanism_id = so.mechanism_id
+        left join ct_user_address ua on ua.address_id = so.address_id
+        where 1 = 1
+        <if test="type != 0">
+            and so.order_subtype = #{type}
+        </if>
+        <if test="status != '-1'">
+            and so.order_status in (${status})
+        </if>
+        <if test="app == 'main'">
+            and so.user_id = #{userId}
+        </if>
+        <if test="app == 'service'">
+            <!-- 遛狗订单，工作者就是遛狗人员，此时pickup_id和giveback_id都是null -->
+            and so.worker_id = #{userId}
+        </if>
+        <if test="app == 'service_extend'">
+            <!-- 接送订单，工作者是美容师id，此时pickup_id和giveback_id不为null，都是工作者id，只不过是接送人员的 -->
+            and (so.pickup_id = #{userId} or so.giveback_id = #{userId})
+        </if>
+        order by so.order_id desc
+        limit #{start}, #{size}
+    </select>
+
+    <select id="getWorkerTransServiceOrder"
+            resultMap="com.cqcej.web.modules.common.dao.ServiceOrderDao.serviceOrderMap">
+        select
+        *
+        from ct_service_order
+        <!-- 美容接送 -->
+        where (order_subtype = ${@com.cqcej.web.modules.common.entity.ServiceOrderEntity@ORDER_SUBTYPE_BEAUTY_TRANS} and
+        (pickup_id = #{workerId} or giveback_id = #{workerId}))
+        <!-- 遛狗订单 -->
+        or (order_subtype = ${@com.cqcej.web.modules.common.entity.ServiceOrderEntity@ORDER_SUBTYPE_HEALTH_WALK_DOG} and
+        worker_id=#{workerId})
+    </select>
+
+    <select id="getServiceOrderDetail" resultMap="appWorkerOrderMap">
+        select
+        so.*,
+        u.nickname,
+        u.avatar,
+        u.mobile,
+        ua.longitude as user_longitude,
+        ua.latitude as user_latitude,
+        pc.class_name,
+        m.address as mechanism_address,
+        m.latitude as mechanism_latitude,
+        m.longitude as mechanism_longitude,
+        m.province_id as mechanism_province_id,
+        m.city_id as mechanism_city_id,
+        m.area_id as mechanism_area_id,
+        m.telephone as mechanism_phone,
+        m.mechanism_name,
+        (select group_concat(image_url separator ',') from ct_service_images as csi where csi.order_id = so.order_id) as
+        attaches
+        from ct_service_order so
+        left join ct_user u on u.user_id = so.user_id
+        left join ct_pet_class pc on pc.pet_class_id = so.pet_class_id
+        left join ct_mechanism m on m.mechanism_id = so.mechanism_id
+        left join ct_user_address ua on ua.address_id = so.address_id
+        where 1 = 1
+        <if test="type == 'id'">
+            and so.order_id = #{obj}
+        </if>
+        <if test="type == 'alipay'">
+            and so.order_no = #{obj}
+        </if>
+        <if test="type == 'wechat'">
+            and so.prepay_id = #{obj}
+        </if>
+    </select>
+
+    <select id="getServiceOrderStatisticsDate"
+            resultType="com.cqcej.web.modules.common.entity.ServiceOrderStatisticsDataEntity">
+		select
+				count(order_id) as monthOrderCount
+		from ct_service_order
+		where pickup_id = #{workerId}
+		   or giveback_id = #{workerId}
+	</select>
+
+    <update id="updateServiceOrderStatus">
+		update ct_service_order set order_status = #{status} where order_id = #{orderId}
+	</update>
+    <update id="refund">
+		update ct_service_order set order_status = ${@com.cqcej.web.modules.common.entity.ServiceOrderEntity@ORDER_STATUS_CANCEL_PENDING_REFUND}, refund_reason=#{refundReason}, refund_explain=#{note}, apply_refund_at = DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s') where order_id=#{orderId}
+	</update>
+
+    <!-- 商户~今日订单-->
+    <select id="getTodayOrder" resultMap="appServiceOrderMap">
+        select
+        so.*,
+        ms.service_name,
+        ms.service_price
+        from ct_service_order so
+        LEFT JOIN ct_mechanism_service ms on so.service_id = ms.mechanism_service_id
+        where so.mechanism_id = #{mechId} and service_id is not null
+        <if test="orderStatus != null">
+            and so.order_status = #{orderStatus}
+        </if>
+        <if test="orderStatus == null">
+            and so.order_status <![CDATA[>]]> 0
+        </if>
+        <if test="today != null and today == 'yes'">
+            and date(so.create_at) = date(now())
+        </if>
+        <if test="today == null or today != 'yes'">
+            and date(so.create_at) <![CDATA[<=]]> date(now())
+        </if>
+        limit #{start},#{size}
+    </select>
+
+    <!-- 商户~订单详情-->
+    <select id="getMechOrderDetail" resultMap="appServiceOrderMap">
+		select
+			so.*,
+			ms.service_name,
+			ms.service_price,
+			u.nickname,
+			u.mobile,
+            up.pet_name,
+			pc.class_name,
+            so.notes,
+            w.longitude as workerLongitude,
+            w.latitude as workerLatitude
+		  from ct_service_order so
+		  LEFT JOIN ct_mechanism_service ms on so.service_id = ms.mechanism_service_id
+		  LEFT JOIN ct_user u on u.user_id = so.user_id
+		  LEFT JOIN ct_user_pets up on so.pet_id = up.pet_id
+		  LEFT JOIN ct_pet_class pc on so.pet_class_id = pc.pet_class_id
+		  LEFT JOIN ct_worker w on so.worker_id = w.worker_id
+		  where so.order_id = #{orderId}
+	</select>
+
+    <!-- 退款订单列表-->
+    <select id="getMechRefundOrderList" resultMap="appServiceOrderMap">
+        select
+        so.*,
+        ms.service_name,
+        ms.service_price
+        from ct_service_order so
+        LEFT JOIN ct_mechanism_service ms on so.service_id = ms.mechanism_service_id
+        where so.order_status in (42,43,44) and so.mechanism_id = #{mechId}
+        limit #{start},#{size}
+    </select>
+
+    <!-- 退款订单详情-->
+    <select id="getMechRefundOrderDetail" resultMap="appServiceOrderMap">
+        select
+			so.*,
+			ms.service_name,
+			ms.service_price,
+			u.nickname,
+			u.mobile,
+            up.pet_name,
+			pc.class_name,
+            so.refund_reason,
+            so.refund_explain
+		  from ct_service_order so
+		  LEFT JOIN ct_mechanism_service ms on so.service_id = ms.mechanism_service_id
+		  LEFT JOIN ct_user u on u.user_id = so.user_id
+		  LEFT JOIN ct_user_pets up on so.pet_id = up.pet_id
+		  LEFT JOIN ct_pet_class pc on so.pet_class_id = pc.pet_class_id
+		  where so.order_id = #{orderId}
+    </select>
+
+    <!-- 退款申请成功更改订单状态43-已退款-->
+    <update id="updateOrder">
+        update ct_service_order set order_status = 43,apply_refund_at = now() where order_id = #{orderId} and mechanism_id = #{mechId}
+    </update>
+
+    <!-- 退款失败(驳回) -->
+    <update id="refuse">
+        update ct_service_order set order_status = 44 where order_id = #{orderId} and mechanism_id = #{mechId}
+    </update>
+</mapper>

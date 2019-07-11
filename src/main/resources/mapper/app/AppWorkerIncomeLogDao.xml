@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.mech.AppWorkerIncomeLogDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.app.entity.AppWorkerIncomeLogEntity" id="appWorkerIncomeLogMap">
+        <result property="logId" column="log_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="amount" column="amount"/>
+        <result property="createAt" column="create_at"/>
+    </resultMap>
+
+    <!--
+        收入统计根据:
+            如果有日期(date), 用户的总收入除以date当月的总天数;
+            如果没有日期(date)，用户的总收入除以((第一天收入到最后一天的间隔的天数)+1)
+        并且保留两位小数和非空判断
+        ps：LAST_DAY(CONCAT(#{date},'-01')) 因为date如果为'2018-11',last_day需要完整日期，所以随便拼接了个-01
+        ps：TO_DAYS(max(create_at))-TO_DAYS(min(create_at) 因为TO_DAYS计算相邻两天结果为1，我们一般视为2，所以+1
+    -->
+    <select id="list" resultType="com.cqcej.web.modules.app.entity.dto.MechWorkerIncomeDTO">
+        select
+        count(1) orderCount ,
+        IFNULL(sum(amount),0) sumMoney,
+        <if test="date == null or date == ''">
+            IFNULL(ROUND(sum(amount) / (TO_DAYS(max(create_at))-TO_DAYS(min(create_at)) +1),2), 0) as average
+        </if>
+        <if test="date != null and date != ''">
+            IFNULL(ROUND(sum(amount) / DAYOFMONTH(LAST_DAY(CONCAT(#{date},'-01'))),2), 0) as average
+        </if>
+        from ct_worker_income_log where user_id = #{userId}
+        <if test="date != null and date != ''">
+            and DATE_FORMAT(create_at,'%Y-%m') = #{date}
+        </if>
+    </select>
+
+    <!-- 每日收入-->
+    <select id="info" resultType="com.cqcej.web.modules.app.entity.dto.MechWorkerDayIncomeDTO">
+        select
+          date_format(create_at,'%e') day,
+          sum(amount) sumMoney
+          from ct_worker_income_log
+        where user_id = #{userId}
+        and DATE_FORMAT(create_at,'%Y-%m') = #{date}
+        GROUP BY date(create_at)
+    </select>
+
+</mapper>
+

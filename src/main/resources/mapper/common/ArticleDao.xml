@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.ArticleDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.common.entity.ArticleEntity" id="articleMap">
+        <result property="articleId" column="article_id"/>
+        <result property="petClassId" column="pet_class_id"/>
+        <result property="articleType" column="article_type"/>
+        <result property="thumbImageUrl" column="thumb_image_url"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleContent" column="article_content"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="priseCount" column="prise_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="sort" column="sort"/>
+        <result property="isRecommend" column="is_recommend"/>
+        <result property="createAt" column="create_at"/>
+    </resultMap>
+
+
+</mapper>

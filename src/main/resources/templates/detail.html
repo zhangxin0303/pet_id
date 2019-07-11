@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+	      charset="utf-8"/>
+	<title></title>
+	<link rel="stylesheet" href="/css/youjia.css" type="text/css"/>
+</head>
+<body>
+<header>
+	<img src="/img/logo.png" class="logo"/>
+</header>
+<tbody>
+<h3 th:utext="${title}"></h3>
+<div class="title2"><span>宠它网</span><span class="time" th:text="${date}"></span></div>
+<div class="content">
+	<div th:utext="${content}"></div>
+</div>
+</tbody>
+<footer>
+</footer>
+</body>
+</html>

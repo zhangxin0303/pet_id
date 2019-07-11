@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminPetClassDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminPetClassEntity" id="adminPetClassMap">
+        <result property="petClassId" column="pet_class_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="iconUrl" column="icon_url"/>
+        <result property="headerWord" column="header_word"/>
+        <result property="className" column="class_name"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+
+    <!-- 获取种类-->
+    <select id="list" resultMap="adminPetClassMap">
+        select * from ct_pet_class where parent_id = 0 or parent_id = 65535
+    </select>
+
+    <!-- 获取宠物-->
+    <select id="getPets" resultMap="adminPetClassMap">
+        select * from ct_pet_class where parent_id = #{petClassId} order by header_word
+    </select>
+
+    <!-- 获取info-->
+    <select id="info" resultMap="adminPetClassMap">
+        select * from ct_pet_class where pet_class_id = #{petClassId}
+    </select>
+
+    <!-- 添加种类-->
+    <insert id="save">
+        insert into ct_pet_class(class_name) values(#{className})
+    </insert>
+
+    <!-- 添加宠物-->
+    <insert id="savePet">
+        insert into ct_pet_class(parent_id, header_word, class_name) values (#{parentId},#{firstLetter},#{className})
+    </insert>
+
+    <!-- 修改宠物-->
+    <update id="updatePet">
+        update ct_pet_class
+        <set>
+            <if test="firstLetter != null">
+                header_word = #{firstLetter},
+            </if>
+            <if test="className != null">
+                class_name = #{className}
+            </if>
+            where pet_class_id = #{petClassId}
+        </set>
+    </update>
+
+    <!-- 删除宠物-->
+    <delete id="deletePet">
+        delete from ct_pet_class where pet_class_id = #{petClassId} or parent_id = #{petClassId};
+    </delete>
+</mapper>

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminArticleDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminArticleEntity" id="articleMap">
+        <id property="articleId" column="article_id"/>
+        <result property="petClassId" column="pet_class_id"/>
+        <result property="articleType" column="article_type"/>
+        <result property="thumbImageUrl" column="thumb_image_url"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleContent" column="article_content"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="priseCount" column="prise_count"/>
+        <result property="sort" column="sort"/>
+        <result property="isRecommend" column="is_recommend"/>
+        <result property="createAt" column="create_at"/>
+        <!--<collection property="articleComments" column="article_id" ofType="com.cqcej.modules.admin.entity.AdminArticleCommentEntity">-->
+        <!--<id property="commentId" column="comment_id"/>-->
+        <!--<result property="articleId" column="article_id"/>-->
+        <!--<result property="userId" column="user_id"/>-->
+        <!--<result property="commentContent" column="comment_content"/>-->
+        <!--<result property="createAt" column="create_at"/>-->
+        <!--<result property="avatar" column="avatar"/>-->
+        <!--<result property="nickname" column="nickname"/>-->
+        <!--</collection>-->
+    </resultMap>
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminArticleCommentEntity" id="articleCommentMap">
+        <result property="commentId" column="comment_id"/>
+        <result property="articleId" column="article_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="commentContent" column="comment_content"/>
+        <result property="createAt" column="create_at"/>
+        <result property="avatar" column="avatar"/>
+        <result property="nickname" column="nickname"/>
+        <result property="forbiddenComment" column="forbidden_comment"></result>
+    </resultMap>
+
+    <!-- 查询某条资讯下的评论总数-->
+    <select id="getCommCount" resultType="java.lang.Integer">
+        select count(*)
+        from ct_article_comment
+        where article_id = #{articleId}
+    </select>
+
+    <!-- 查询某条资讯下的评论-->
+    <select id="getCommList" resultMap="articleCommentMap">
+        select
+          ac.*,
+          u.avatar,
+          u.nickname,
+          u.forbidden_comment
+        from ct_article_comment ac
+        LEFT JOIN ct_user u ON ac.user_id = u.user_id
+        where ac.article_id = #{articleId}
+        order by ac.create_at DESC
+        limit
+          #{start},#{size}
+    </select>
+
+    <!-- 编辑资讯-->
+    <select id="selectArticleById" resultMap="articleMap">
+        select
+		  article_id,
+		  article_content
+        from ct_article
+        where article_id = #{articleId}
+    </select>
+
+    <!-- 查看资讯-->
+    <select id="view" resultMap="articleMap">
+        select
+		  *
+        from ct_article
+        where article_id = #{articleId}
+    </select>
+
+
+    <!-- 资讯列表总数-->
+    <select id="getArticleCount" resultType="java.lang.Integer">
+        select
+        count(*)
+        from ct_article AS a
+        <where>
+            <if test="articleTitle !=null and articleTitle != ''">
+                a.article_title like concat(concat('%',#{articleTitle}),'%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 资讯列表-->
+    <select id="getArticleList" resultMap="articleMap">
+        select
+            a.article_id,
+            a.article_title,
+            a.create_at,
+            a.article_type
+        from ct_article AS a
+        <where>
+            <if test="articleTitle !=null and articleTitle != ''">
+                a.article_title like concat(concat('%',#{articleTitle}),'%')
+            </if>
+        </where>
+        order by
+        create_at DESC
+	    limit #{start},#{size}
+    </select>
+
+    <!--批量删除资讯-->
+    <delete id="deleteArticleByIds" parameterType="java.util.List">
+        delete from ct_article where article_id in
+        <foreach collection="articleIds" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+    <!--&lt;!&ndash; 删除资讯&ndash;&gt;-->
+    <!--<delete id="deleteArticleById">-->
+    <!--delete from ct_article where article_id = #{articleId}-->
+    <!--</delete>-->
+    <!-- 新增资讯-->
+    <insert id="saveArticle" parameterType="com.cqcej.web.modules.admin.entity.AdminArticleEntity">
+          insert into ct_article(article_type,article_title,article_content,create_at)
+          values(#{articleType},#{articleTitle},#{articleContent},NOW());
+    </insert>
+    <!-- 删除资讯评论-->
+    <delete id="deleteArticleComment">
+        delete from ct_article_comment  where ct_article_comment.comment_id = #{commentId};
+    </delete>
+
+    <!-- 禁言用户-->
+    <update id="forbidden">
+      update ct_user set forbidden_comment = 1 where user_id = #{userId}
+    </update>
+    <!-- 修改资讯-->
+    <update id="updateArticleById">
+        update ct_article
+        <set>
+            <if test="articleTitle != null">
+                article_title = #{articleTitle},
+            </if>
+            <if test="articleContent != null">
+                article_content = #{articleContent}
+            </if>
+        </set>
+        where article_id = #{articleId}
+    </update>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

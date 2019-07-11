@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminCommunityDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminCommunityEntity" id="communityMap">
+        <result property="communityId" column="community_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="title" column="title"/>
+        <result property="address" column="address"/>
+        <result property="context" column="context"/>
+        <result property="favoriteCount" column="favorite_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="priseCount" column="prise_count"/>
+        <result property="top" column="top"/>
+        <result property="createAt" column="create_at"/>
+        <result property="commCount" column="commCount"/>
+        <result property="className" column="class_name"/>
+        <result property="latestTime" column="latestTime"/>
+        <result property="nickname" column="nickname"/>
+    </resultMap>
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminCommunityCommentEntity" id="communityCommentMap">
+        <result property="commentId" column="comment_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="communityId" column="community_id"/>
+        <result property="context" column="context"/>
+        <result property="priseCount" column="prise_count"/>
+        <result property="createAt" column="create_at"/>
+        <result property="avatar" column="avatar"/>
+        <result property="nickname" column="nickname"/>
+        <result property="forbiddenComment" column="forbidden_comment" />
+    </resultMap>
+    <!--   //获取帖子总数-->
+    <select id="getCommunityCount" resultType="java.lang.Integer">
+        select count(*) from ct_community AS c where 1=1
+        <if test="classId != null and classId != ''">
+            and c.class_id = #{classId}
+        </if>
+        <if test="title != null and title != ''">
+            and c.title like concat(concat('%',#{title}),'%')
+        </if>
+    </select>
+
+    <!--   //获取帖子列表-->
+    <select id="getCommunitylist" resultMap="communityMap">
+        select
+            (select count(*) from ct_community_comment ctcc where ctcc.community_id = c.community_id)
+            as commCount,
+            c.community_id,
+            c.title,
+            c.class_id,
+            c.create_at,
+            cc.class_name,
+            c.view_count,
+            (select max(create_at) create_at from ct_community_comment AS com where c.community_id = com.community_id group by community_id)
+            as latestTime,
+            c.top
+        from
+          ct_community AS c
+        LEFT JOIN ct_community_class AS cc on c.class_id = cc.class_id
+        where 1=1
+        <if test="classId != null and classId != ''">
+            and c.class_id = #{classId}
+        </if>
+        <if test="title != null and title != ''">
+            and c.title like concat(concat('%',#{title}),'%')
+        </if>
+        order by c.top DESC ,c.create_at DESC
+        limit #{start},#{size}
+    </select>
+
+    <!--   //帖子置顶-->
+    <update id="top">
+      update ct_community set top = #{isTop} where community_id = #{communityId}
+    </update>
+
+    <!-- 删除帖子-->
+    <delete id="deleteCommunity">
+        delete from ct_community where  community_id = #{communityId}
+    </delete>
+    <!-- 删除对应评论-->
+    <delete id="deleteCommentByCommunityId">
+        delete from ct_community_comment where  community_id = #{communityId}
+    </delete>
+
+    <!-- 查询帖子-->
+    <select id="selectById" resultMap="communityMap">
+        select * from ct_community where community_id = #{communityId}
+    </select>
+    <!-- 查询帖子评论-->
+    <select id="getCommList" resultMap="communityCommentMap">
+      select
+        cc.user_id,
+        u.avatar,
+        u.nickname,
+        u.forbidden_comment,
+        cc.comment_id,
+        cc.context,
+        cc.create_at
+      from ct_community_comment cc
+      LEFT JOIN ct_user u on u.user_id = cc.user_id
+      where cc.community_id = #{communityId}
+      order by cc.create_at DESC
+      limit #{start},#{size}
+    </select>
+    <!-- //查询评论总数-->
+    <select id="getCommCount" resultType="java.lang.Integer">
+        select count(*) from ct_community_comment where community_id = #{communityId}
+    </select>
+    <!-- 删除帖子评论-->
+    <delete id="deleteCommunityComment">
+        delete from ct_community_comment  where ct_community_comment.comment_id = #{commentId};
+    </delete>
+	
+    <!-- 新增主题(帖子)-->
+    <insert id="saveCommunity">
+        insert into ct_community(title,class_id,pet_class_id,context,user_id,create_at)
+        values (#{title},#{classId},#{petClassId},#{context},#{userId},NOW())
+    </insert>
+	
+    <update id="updateCommunity">
+        update ct_community set context = #{context} where community_id = #{communityId}
+    </update>
+	
+    <!-- 查看-->
+    <select id="view" resultMap="communityMap">
+        SELECT
+            c.*,
+            cc.class_name,
+            u.nickname
+        from ct_community c
+        LEFT JOIN ct_community_class cc on  c.class_id = cc.class_id
+        LEFT JOIN ct_user u on c.user_id = u.user_id
+        where c.community_id = #{communityId}
+    </select>
+</mapper>

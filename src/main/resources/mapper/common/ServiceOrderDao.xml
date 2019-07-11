@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.ServiceOrderDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.common.entity.ServiceOrderEntity" id="serviceOrderMap">
+		<result property="orderId" column="order_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="mechanismId" column="mechanism_id"/>
+		<result property="workerId" column="worker_id"/>
+		<result property="pickupId" column="pickup_id"/>
+		<result property="givebackId" column="giveback_id"/>
+		<result property="orderStatus" column="order_status"/>
+		<result property="serviceId" column="service_id"/>
+		<result property="petClassId" column="pet_class_id"/>
+		<result property="petId" column="pet_id"/>
+		<result property="subject" column="subject"/>
+		<result property="orderType" column="order_type"/>
+		<result property="orderSubtype" column="order_subtype"/>
+		<result property="orderNo" column="order_no"/>
+		<result property="orderAmount" column="order_amount"/>
+		<result property="discountAmount" column="discount_amount"/>
+		<result property="serviceAmount" column="service_amount"/>
+		<result property="pickupAmount" column="pickup_amount"/>
+		<result property="givebackAmount" column="giveback_amount"/>
+		<result property="scoreDiscount" column="score_discount"/>
+		<result property="scoreDiscountAmount" column="score_discount_amount"/>
+		<result property="couponId" column="coupon_id"/>
+		<result property="couponDiscountAmount" column="coupon_discount_amount"/>
+		<result property="payAmount" column="pay_amount"/>
+		<result property="reserveAt" column="reserve_at"/>
+		<result property="isDistributing" column="is_distributing"/>
+		<result property="isPay" column="is_pay"/>
+		<result property="tradeNo" column="trade_no"/>
+		<result property="paymentId" column="payment_id"/>
+		<result property="prepayId" column="prepay_id"/>
+		<result property="payAt" column="pay_at"/>
+		<result property="beginAt" column="begin_at"/>
+		<result property="endAt" column="end_at"/>
+		<result property="notes" column="notes"/>
+		<result property="provinceId" column="province_id"/>
+		<result property="cityId" column="city_id"/>
+		<result property="areaId" column="area_id"/>
+		<result property="linkType" column="link_type"/>
+		<result property="addressId" column="address_id"/>
+		<result property="address" column="address"/>
+		<result property="isPickup" column="is_pickup"/>
+		<result property="fosterTime" column="foster_time"/>
+		<result property="walkDogTime" column="walk_dog_time"/>
+		<result property="during" column="during"/>
+		<result property="applyRefundAt" column="apply_refund_at"/>
+		<result property="agreeRefundAt" column="agree_refund_at"/>
+		<result property="refundReason" column="refund_reason"/>
+		<result property="refundExplain" column="refund_explain"/>
+		<result property="source" column="source"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+
+
+</mapper>

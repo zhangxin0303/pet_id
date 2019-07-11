@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminScheduleJobDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.cqcej.web.modules.admin.entity.AdminScheduleJobEntity" id="adminScheduleJobMap">
+        <result property="jobId" column="job_id"/>
+        <result property="beanName" column="bean_name"/>
+        <result property="jobName" column="job_name"/>
+        <result property="methodName" column="method_name"/>
+        <result property="params" column="params"/>
+        <result property="cronExpression" column="cron_expression"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+
+    <select id="list" resultMap="adminScheduleJobMap">
+        select * from schedule_job limit #{start},#{size}
+    </select>
+
+    <select id="getListCount" resultType="java.lang.Integer">
+        select count(*) from schedule_job
+    </select>
+
+    <select id="getStartCount" resultType="java.lang.Integer">
+        select count(*) from schedule_job where status = 0
+    </select>
+
+    <select id="getForbiddenCount" resultType="java.lang.Integer">
+        select count(*) from schedule_job where status = 1
+    </select>
+
+    <update id="updateStatus">
+        update schedule_job set status = #{status} where job_id = #{jobId}
+    </update>
+
+    <delete id="deleteSchedule">
+        delete from schedule_job where job_id = #{jobId}
+    </delete>
+    
+    <insert id="saveScheduleJob">
+        insert into schedule_job(bean_name,job_name,method_name,params,cron_expression,status,remark,create_time)
+        values (#{beanName},#{jobName},#{methodName},#{params},#{cronExpression},#{status},#{remark},now())
+    </insert>
+
+    <select id="getSchedulejobById" resultMap="adminScheduleJobMap">
+        select * from schedule_job where job_id = #{jobId}
+    </select>
+
+    <update id="updateScheduleJob">
+        update schedule_job
+        <set>
+            <if test="beanName != null">
+                bean_name = #{beanName},
+            </if>
+            <if test="jobName != null">
+                job_name = #{jobName},
+            </if>
+            <if test="methodName != null">
+                method_name = #{methodName},
+            </if>
+            <if test="params != null">
+                params = #{params},
+            </if>
+            <if test="cronExpression != null">
+                cron_expression = #{cronExpression},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark}
+            </if>
+        </set>
+        where job_id = #{jobId}
+    </update>
+</mapper>

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppWorkerDao">
+	
+	<resultMap id="workerWithUser" type="com.cqcej.web.modules.app.entity.home.AppWorkerEntity"
+	           extends="com.cqcej.web.modules.common.dao.WorkerDao.workerMap">
+		<result property="mechanismLogo" column="mechanism_logo"/>
+		<result property="mechanismName" column="mechanism_name"/>
+		<result property="userAvatar" column="avatar"/>
+		<result property="userNickname" column="nickname"/>
+		<result property="userMobile" column="mobile"/>
+		<result property="sex" column="sex"/>
+	</resultMap>
+	
+	<resultMap id="workerDetail" type="com.cqcej.web.modules.app.entity.home.AppWorkerEntity"
+	           extends="workerWithUser">
+		<collection property="comments" ofType="com.cqcej.web.modules.app.entity.home.AppWorkerCommentEntity"
+		            javaType="ArrayList" column="worker_id"
+		            select="com.cqcej.web.modules.app.dao.home.AppWorkerCommentDao.selectComments"/>
+	</resultMap>
+	
+	<select id="getRecommendDoctor" resultMap="workerWithUser">
+		select w.*,
+		       u.avatar,
+		       u.nickname,
+		       m.mechanism_name,
+		       m.logo_url as mechanism_logo
+		from ct_worker w
+			     left join ct_user u on u.user_id = w.user_id
+			     left join ct_mechanism m on m.mechanism_id = w.mechanism_id
+		where w.is_recommend = 1
+		  and worker_type = ${@com.cqcej.web.modules.common.entity.WorkerEntity@WORKER_TYPE_DOCTOR}
+		order by sort desc
+	</select>
+	
+	<select id="getDoctor" resultMap="workerWithUser">
+		select
+		w.*,
+		u.avatar,
+		u.nickname,
+		m.mechanism_name,
+		w.reply_in_24_hours_count / w.consult_count as reply_rate,
+		w.good_comment_count / w.consult_count as good_rate,
+		ifnull(st_distance(point(#{longitude}, #{latitude}), point(m.longitude, m.latitude)), 0) as distance,
+		m.logo_url as mechanism_logo
+		from
+		ct_worker w
+		left join ct_user u on u.user_id = w.user_id
+		left join ct_mechanism m on m.mechanism_id=w.mechanism_id
+		where
+		worker_type = #{type}
+		<if test="petClassId != 0">
+			and w.pet_class_id=#{petClassId}
+		</if>
+		<if test="mechanismId != 0">
+			and w.mechanism_id=#{mechanismId}
+		</if>
+		order by
+		<choose>
+			<when test="sortType == 0">
+				<!-- 综合排序 -->
+				good_rate desc, consult_count desc, reply_rate desc
+			</when>
+			<when test="sortType == 1">
+				<!-- 距离排序 -->
+				distance asc
+			</when>
+			<when test="sortType == 2">
+				<!-- 优质筛选 -->
+				w.create_at desc
+			</when>
+		</choose>
+		limit #{start}, #{size}
+	</select>
+	
+	<select id="getWorkerDetail" resultMap="workerDetail">
+		select w.*, u.avatar, u.nickname, m.mechanism_name
+		from ct_worker w
+			     left join ct_user u on u.user_id = w.user_id
+			     left join ct_mechanism m on m.mechanism_id = w.mechanism_id
+		where worker_id = #{workerId}
+	</select>
+	
+	<select id="getHotBeautician" resultMap="workerDetail">
+		select w.*, u.avatar, u.nickname
+		from ct_worker w
+			     left join ct_user u on u.user_id = w.user_id
+		where w.is_recommend = 1
+		  and worker_type = ${@com.cqcej.web.modules.common.entity.WorkerEntity@WORKER_TYPE_BEAUTICIAN}
+		order by w.recommend_at desc
+		limit 6
+	</select>
+	
+	<select id="getWorkerWithUserId" resultMap="com.cqcej.web.modules.common.dao.WorkerDao.workerMap">
+		select *
+		from ct_worker
+		where user_id = #{userId}
+	</select>
+
+	<update id="updateCoordinate">
+		update ct_worker set longitude = #{longitude},latitude = #{latitude} where userId = #{userId}
+	</update>
+
+	<select id="workerList" resultMap="workerWithUser">
+		select
+		 u.nickname,
+		 u.mobile,
+		 u.avatar,
+		 u.sex,
+		 w.chat_fee,
+		 w.telephone_fee,
+		 w.ondoor_fee,
+		 w.transport_fee,
+		 w.walk_dog_fee,
+		 w.worker_id,
+		 w.good_at
+		 from ct_worker w
+		LEFT JOIN ct_user u on w.user_id = u.user_id
+		where mechanism_id = #{mechId}
+		and w.is_delete = 0
+		<if test="workerType == 21">
+			and (worker_type = 21 or worker_type = 22)
+		</if>
+		<if test="workerType != 21">
+			and worker_type = #{workerType}
+		</if>
+	</select>
+
+	<update id="deleteByWorkerId">
+		update ct_worker set is_delete = 1 where worker_id in 
+		<foreach collection="list" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</update>
+
+	<!--增加用户(医师)-->
+	<insert id="insertUser" parameterType="com.cqcej.web.modules.app.form.MechDoctorForm" useGeneratedKeys="true"
+			keyProperty="userId">
+		<!--<selectKey keyProperty="userId" order="AFTER" resultType="java.lang.Long">-->
+		<!--SELECT LAST_INSERT_ID()-->
+		<!--</selectKey>-->
+		insert into ct_user(nickname,realname,mobile,password,avatar,user_type,create_at)
+		values (#{realname},#{realname},#{mobile},#{password},#{avatar},20,now())
+	</insert>
+
+	<!-- 增加工作者(医师)-->
+	<insert id="insertWorker">
+        insert into ct_worker(user_id,mechanism_id,type,worker_type,good_at,chat_fee,telephone_fee,ondoor_fee,worker_description,create_at)
+        values (#{userId},#{mechanismId},0,20,#{goodAt},#{chatFee},#{telephoneFee},#{ondoorFee},#{workerDescription},now())
+    </insert>
+
+	<!-- 查看工作者信息-->
+	<select id="workerInfo" resultMap="workerWithUser">
+        select * from ct_worker w left join ct_user u on w.user_id = u.user_id where w.worker_id = #{workerId}
+    </select>
+
+	<!-- 更新医师-->
+	<update id="updateDoctor">
+		update ct_user u,ct_worker w
+		<set>
+			<if test="realname != null">
+				u.realname = #{realname},
+			</if>
+			<if test="mobile != null">
+				u.mobile = #{mobile},
+			</if>
+			<if test="password != null">
+				u.password = #{password},
+			</if>
+			<if test="goodAt != null">
+				w.good_at = #{goodAt},
+			</if>
+			<if test="chatFee != null">
+				w.chat_fee = #{chatFee},
+			</if>
+			<if test="telephoneFee != null">
+				w.telephone_fee = #{telephoneFee},
+			</if>
+			<if test="ondoorFee != null">
+				w.ondoor_fee = #{ondoorFee},
+			</if>
+			<if test="workerDescription != null">
+				w.worker_description = #{workerDescription},
+			</if>
+			<if test="avatar != null">
+				u.avatar = #{avatar}
+			</if>
+		</set>
+		where u.user_id = #{userId} and w.worker_id = #{workerId}
+	</update>
+
+	<!-- 医师订单统计-->
+	<!-- 历史总金额-->
+	<select id="findTotalSum" resultType="java.math.BigDecimal">
+		select
+			ifnull(sum(amount),0) sumAmount
+		from ct_worker_income_log wil
+		left join ct_worker w on w.user_id = wil.user_id
+		where w.worker_id = #{workerId}
+	</select>
+
+	<!-- 当月总金额和订单量-->
+	<select id="findCountAndSum" resultType="com.cqcej.web.modules.app.entity.dto.MechDoctorStatInfoDTO">
+		select
+			count(*) orderCount,
+			ifnull(sum(wil.amount),0) sumAmount
+		 from ct_worker_income_log wil
+		 left join ct_worker w on w.user_id = wil.user_id
+		 where w.worker_id = #{workerId} and DATE_FORMAT(wil.create_at,'%Y-%m') = #{date}
+	</select>
+
+	<!-- 统计明细-->
+	<select id="statistics" resultType="com.cqcej.web.modules.app.entity.dto.MechDoctorStatisticsDTO">
+		select
+			date(wil.create_at) date,
+			count(*) count,
+			ifnull(sum(wil.amount),0) amount
+		from ct_worker_income_log wil
+		left join ct_worker w on w.user_id = wil.user_id
+		where w.worker_id = #{workerId} and DATE_FORMAT(wil.create_at,'%Y-%m') = #{date}
+		group by date(wil.create_at) order by wil.create_at
+	</select>
+
+	<!--增加用户(美容师)-->
+	<insert id="insertUserOfBeautician" parameterType="com.cqcej.web.modules.app.form.MechBeauticianForm"
+			useGeneratedKeys="true" keyProperty="userId">
+        insert into ct_user(nickname,realname,avatar,user_type,create_at)
+        values (#{realname},#{realname},#{avatar},11,now())
+    </insert>
+
+	<!-- 增加工作者(美容师)-->
+	<insert id="insertWorkerOfBeautician">
+        insert into ct_worker(user_id,mechanism_id,type,worker_type,good_at,worker_description,create_at)
+        values (#{userId},#{mechanismId},0,23,#{goodAt},#{workerDescription},now())
+    </insert>
+
+	<!-- 更新美容师-->
+	<update id="updateBeautician">
+		update ct_user u,ct_worker w
+		<set>
+			<if test="realname != null">
+				u.realname = #{realname},
+			</if>
+			<if test="goodAt != null">
+				w.good_at = #{goodAt},
+			</if>
+			<if test="workerDescription != null">
+				w.worker_description = #{workerDescription},
+			</if>
+			<if test="avatar != null">
+				u.avatar = #{avatar}
+			</if>
+		</set>
+		where u.user_id = #{userId} and w.worker_id = #{workerId}
+	</update>
+
+	<!--增加用户(接送人员)-->
+	<insert id="insertUserOfPickUp" parameterType="com.cqcej.web.modules.app.form.MechPickupForm"
+			useGeneratedKeys="true" keyProperty="userId">
+        insert into ct_user(nickname,realname,mobile,password,sex,avatar,user_type,create_at)
+        values (#{realname},#{realname},#{mobile},#{password},#{sex},#{avatar},#{workerType},now())
+    </insert>
+
+	<!-- 增加工作者(接送人员)-->
+	<insert id="insertWorkerOfPickUp">
+        insert into ct_worker(user_id,mechanism_id,type,worker_type,create_at)
+        values (#{userId},#{mechanismId},0,21,now())
+    </insert>
+
+	<!-- 更新接送员-->
+	<update id="updatePickup">
+		update ct_user u,ct_worker w
+		<set>
+			<if test="realname != null">
+				u.realname = #{realname},
+			</if>
+			<if test="sex != null">
+				u.sex = #{sex},
+			</if>
+			<if test="avatar != null">
+				u.avatar = #{avatar},
+			</if>
+			<if test="mobile != null">
+				u.mobile = #{mobile},
+			</if>
+			<if test="workerType != null and workerType == 21">
+				w.worker_type = 21,
+			</if>
+			<if test="workerType != null and workerType == 22">
+				w.worker_type = 22
+			</if>
+		</set>
+		where u.user_id = #{userId} and w.worker_id = #{workerId}
+	</update>
+</mapper>

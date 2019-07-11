@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppMechanismServiceDao">
+	
+	<!-- 基本map -->
+	<resultMap type="com.cqcej.web.modules.app.entity.home.AppMechanismServiceEntity" id="appMechanismServiceMap"
+	           extends="com.cqcej.web.modules.common.dao.MechanismServiceDao.mechanismServiceMap">
+		<result property="petClassName" column="class_name"/>
+	</resultMap>
+	<select id="getMechanismServices"
+	        resultMap="appMechanismServiceMap">
+		select ms.*, pc.class_name
+		from ct_mechanism_service ms
+			left join ct_pet_class pc on pc.pet_class_id = ms.pet_class_id
+		where mechanism_id = #{mechanismId} and service_type=1
+		order by pet_class_id asc, ms.sort desc
+	</select>
+
+	<select id="selectServiceList" resultMap="appMechanismServiceMap">
+		select *
+		from ct_mechanism_service ms
+		left join ct_pet_class cpc on ms.pet_class_id = cpc.pet_class_id
+		where
+		mechanism_id=#{mechId}
+		and service_type=#{serviceType}
+		and is_delete = 0 order by ms.sort DESC
+	</select>
+
+	<insert id="addService">
+		insert into ct_mechanism_service(pet_class_id,mechanism_id,service_type,service_name,service_price,create_at)
+		values (#{petClassId},#{mechId},#{serviceType},#{serviceName},#{servicePrice},now())
+	</insert>
+
+	<update id="updateService">
+		update ct_mechanism_service set
+			service_type = #{serviceType},
+			service_name = #{serviceName},
+			pet_class_id = #{petClassId},
+			service_price = #{servicePrice}
+		where mechanism_service_id = #{mechServiceId}
+	</update>
+
+	<delete id="deleteImages">
+		delete from ct_mechanism_images where image_id in
+		<foreach collection="list" separator="," open="(" close=")" item="id">
+			#{id}
+		</foreach>
+	</delete>
+
+	<update id="deleteByServiceId">
+		update ct_mechanism_service set is_delete = 1 where mechanism_service_id in
+		<foreach collection="list" separator="," open="(" close=")" item="id">
+			#{id}
+		</foreach>
+	</update>
+
+	<select id="selectMechStart" resultType="java.lang.Integer">
+		select stars from ct_mechanism where mechanism_id = #{mechId}
+	</select>
+
+	<select id="commentListCount" resultType="java.lang.Integer">
+		  select count(*) from ct_mechanism_comment where mechanism_id = #{mechId}
+	</select>
+
+	<select id="commentList" resultType="com.cqcej.web.modules.app.entity.home.AppMechanismCommentEntity">
+		select
+			mc.common_id,
+			u.nickname,
+			u.avatar userAvatar,
+			mc.comment_content,
+			mc.comment_level,
+			mc.reply_content,
+			mc.create_at
+			from ct_mechanism_comment mc
+			LEFT JOIN ct_user u on mc.user_id = u.user_id
+		where mc.mechanism_id = #{mechId}
+		limit #{start},#{size}
+	</select>
+
+	<!-- 回复评论-->
+	<update id="addReply">
+		update ct_mechanism_comment set replay_content = #{content} where common_id = #{commonId}
+	</update>
+</mapper>

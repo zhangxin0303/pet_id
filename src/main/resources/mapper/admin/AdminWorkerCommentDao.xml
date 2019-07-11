@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.admin.dao.AdminWorkerCommentDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.admin.entity.AdminWorkerCommentEntity" id="workerCommentMap">
+		<result property="commonId" column="common_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="workerId" column="worker_id"/>
+		<result property="commentLevel" column="comment_level"/>
+		<result property="commentContent" column="comment_content"/>
+		<result property="createAt" column="create_at"/>
+	</resultMap>
+	
+	<resultMap type="com.cqcej.web.modules.admin.entity.AdminWorkerCommentResultEntity" id="workerCommentResultMap">
+		<result property="nickname" column="nickname"/>
+		<result property="goodComment" column="goodComment"/>
+		<result property="midComment" column="midComment"/>
+		<result property="badComment" column="badComment"/>
+		<result property="levelRatio" column="levelRatio"/>
+		<result property="workerId" column="workerId"/>
+	</resultMap>
+	
+	<resultMap type="com.cqcej.web.modules.admin.entity.AdminServiceOrderCommentEntity" id="orderCommentMap">
+		<result property="orderId" column="orderId"/>
+		<result property="commentLevel" column="commentLevel"/>
+		<result property="commentContent" column="commentContent"/>
+		<result property="nickname" column="nickname"/>
+		<result property="createAt" column="createAt"/>
+	</resultMap>
+	
+	<!--查询工作人员评价总条数-->
+	<select id="getWorkerCommentCount" resultType="java.lang.Integer">
+		SELECT
+			count(distinct(w.worker_id))
+		FROM
+		ct_worker_comment wc
+		LEFT JOIN ct_worker w ON wc.worker_id = w.worker_id
+		LEFT JOIN ct_user u on w.user_id = u.user_id
+		where 1=1
+		<if test="workerType != null">
+			and w.worker_type = #{workerType}
+		</if>
+		<if test="nickname != null and nickname !=''">
+			and nickname like concat(concat('%',#{nickname}),'%')
+		</if>
+	</select>
+	
+	<!-- 查询工作人员评价 -->
+	<select id="getWorkerCommentResultList" resultMap="workerCommentResultMap">
+		SELECT
+		u.nickname,wc.worker_id AS workerId,
+		COUNT(IF(wc.comment_level = 3,true,null)) AS goodComment,
+		COUNT(IF(wc.comment_level = 2,true,null)) AS midComment,
+		COUNT(IF(wc.comment_level = 1,true,null)) AS badComment,
+		format(COUNT(IF(wc.comment_level = 3,true,null)) / COUNT(wc.comment_level) * 5,2) AS levelRatio
+		FROM
+		ct_worker_comment wc
+		LEFT JOIN ct_worker w ON wc.worker_id = w.worker_id
+		LEFT JOIN ct_user u on w.user_id = u.user_id
+		where 1=1
+		<if test="workerType != null">
+			and w.worker_type = #{workerType}
+		</if>
+		<if test="nickname != null and nickname !=''">
+			and nickname like concat(concat('%',#{nickname}),'%')
+		</if>
+		GROUP BY
+		wc.worker_id
+		LIMIT
+		#{start},#{size}
+	</select>
+	
+	<!--获取订单总数 -->
+	<select id="getOrderCommentCount" resultType="java.lang.Integer">
+		SELECT
+		count(*)
+		FROM ct_service_order AS so
+		LEFT JOIN ct_user AS u on u.user_id = so.user_id
+		LEFT JOIN ct_worker_comment AS wc on so.worker_id = wc.worker_id
+		where 1=1
+		<if test="workerId != null and workerId !=''">
+			and so.worker_id = #{workerId}
+		</if>
+		<if test="commentLevel != null and commentLevel !=''">
+			and wc.comment_level = #{commentLevel}
+		</if>
+	</select>
+	
+	<!--获取订单评价(查看) -->
+	<select id="getOrderCommentList" resultMap="orderCommentMap">
+		SELECT
+		so.order_id AS orderId,
+		wc.comment_level AS commentLevel,
+		wc.comment_content AS commentContent,
+		u.nickname,
+		wc.create_at AS createAt
+		FROM ct_service_order AS so
+		LEFT JOIN ct_user AS u on u.user_id = so.user_id
+		LEFT JOIN ct_worker_comment AS wc on so.worker_id = wc.worker_id
+		where 1=1
+		<if test="workerId != null and workerId !=''">
+			and so.worker_id = #{workerId}
+		</if>
+		<if test="commentLevel != null and commentLevel !=''">
+			and wc.comment_level = #{commentLevel}
+		</if>
+		LIMIT
+		#{start},#{size}
+	</select>
+</mapper>

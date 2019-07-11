@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.home.AppWorkerCommentDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.app.entity.home.AppWorkerCommentEntity" id="appWorkerCommentMap"
+	           extends="com.cqcej.web.modules.common.dao.WorkerCommentDao.workerCommentMap">
+		<result property="userAvatar" column="avatar"/>
+		<result property="userNickname" column="nickname"/>
+	</resultMap>
+	
+	<select id="selectComments" parameterType="Long"
+	        resultMap="appWorkerCommentMap">
+		select wc.*, u.avatar, u.nickname
+		from ct_worker_comment wc
+			     left join ct_user u on u.user_id = wc.user_id
+		where worker_id = #{workerId}
+		order by create_at desc
+		limit 3
+	</select>
+	
+	<select id="getWorkerComments"
+	        resultMap="appWorkerCommentMap">
+		select wc.*, u.avatar, u.nickname
+		from ct_worker_comment wc
+			     left join ct_user u on u.user_id = wc.user_id
+		where worker_id = #{workerId}
+		order by create_at desc
+		limit #{start},#{size}
+	</select>
+	
+	<select id="getWorkerCommentCount" resultType="java.lang.Integer">
+		select count(*)
+		from ct_worker_comment
+		where worker_id = #{workerId}
+	</select>
+</mapper>

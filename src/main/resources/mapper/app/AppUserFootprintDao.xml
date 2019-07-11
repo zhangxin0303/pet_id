@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.app.dao.AppUserFootprintDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.app.entity.AppUserFootprintEntity" id="appUserFootprintMap"
+	           extends="com.cqcej.web.modules.common.dao.UserFootprintDao.userFootprintMap">
+		<result property="mechanismName" column="mechanism_name"/>
+		<result property="mechanismImage" column="mechanism_image"/>
+		<result property="mechanismKeywords" column="keywords"/>
+		<result property="mechanismStars" column="stars"/>
+		<result property="areaName" column="area_name"/>
+		<result property="longitude" column="longitude"/>
+		<result property="latitude" column="latitude"/>
+	</resultMap>
+	
+	<select id="getUserFootprint" resultMap="appUserFootprintMap">
+		select
+			uf.*,
+			m.mechanism_name,
+			m.keywords,
+			m.stars,
+			m.latitude,
+			m.longitude,
+			a.area_name,
+			(select image_url
+			 from ct_mechanism_images as mi
+			 where mi.mechanism_id = uf.mechanism_id
+			 limit 1) as mechanism_image
+		from ct_user_footprint uf
+			left join ct_mechanism m on m.mechanism_id = uf.mechanism_id
+			left join ct_area a on a.area_id = m.area_id
+		where uf.user_id = #{userId}
+		order by uf.create_at desc
+	</select>
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cqcej.web.modules.common.dao.WorkerDao">
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.cqcej.web.modules.common.entity.WorkerEntity" id="workerMap">
+		<result property="workerId" column="worker_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="mechanismId" column="mechanism_id"/>
+		<result property="petClassId" column="pet_class_id"/>
+		<result property="workerType" column="worker_type"/>
+		<result property="workerDescription" column="worker_description"/>
+		<result property="goodAt" column="good_at"/>
+		<result property="chatFee" column="chat_fee"/>
+		<result property="telephoneFee" column="telephone_fee" />
+		<result property="ondoorFee" column="ondoor_fee"/>
+		<result property="transportFee" column="transport_fee"/>
+		<result property="walkDogFee" column="walk_dog_fee"/>
+		<result property="orderCount" column="order_count"/>
+		<result property="consultCount" column="consult_count"/>
+		<result property="transportCount" column="transport_count"/>
+		<result property="walkDogCount" column="walk_dog_count"/>
+		<result property="commentCount" column="comment_count"/>
+		<result property="goodCommentCount" column="good_comment_count"/>
+		<result property="stars" column="stars"/>
+		<result property="replyIn24HoursCount" column="reply_in_24_hours_count"/>
+		<result property="isRecommend" column="is_recommend"/>
+		<result property="recommendAt" column="recommend_at"/>
+		<result property="sort" column="sort"/>
+	</resultMap>
+</mapper>
